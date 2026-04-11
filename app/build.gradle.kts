@@ -1,6 +1,15 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+val releaseKeyPropertiesFile = rootProject.file("key.properties")
+val releaseKeyProperties = Properties().apply {
+    if (releaseKeyPropertiesFile.exists()) {
+        releaseKeyPropertiesFile.inputStream().use(::load)
+    }
 }
 
 android {
@@ -19,13 +28,37 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            if (releaseKeyPropertiesFile.exists()) {
+                storeFile = file(releaseKeyProperties["storeFile"] as String)
+                storePassword = releaseKeyProperties["storePassword"] as String
+                keyAlias = releaseKeyProperties["keyAlias"] as String
+                keyPassword = releaseKeyProperties["keyPassword"] as String
+            } else {
+                initWith(getByName("debug"))
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
         }
     }
 

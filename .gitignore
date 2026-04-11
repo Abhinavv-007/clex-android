@@ -2,7 +2,11 @@
 .idea/
 build/
 app/build/
+dist/
 captures/
 local.properties
+key.properties
+*.jks
+*.keystore
 *.iml
 .DS_Store
