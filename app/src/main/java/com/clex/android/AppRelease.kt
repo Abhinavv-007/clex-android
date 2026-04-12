@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.4"
-    const val versionCode = 194
+    const val versionName = "1.9.5"
+    const val versionCode = 195
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.5",
+            releasedOn = "12 Apr 2026",
+            notes = listOf(
+                "Fixed Clex Link readiness so selecting the nearby route now prompts BLE permissions and starts discovery on the device that should become visible.",
+                "Added Android chain write instrumentation with receiver chain-ID handoff and surfaced file type, file size, and hash detail in the mobile ledger view.",
+                "Updated the workspace and vault page marks and aligned chain receiver-ID propagation across the mobile and web stacks."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.4",
             releasedOn = "12 Apr 2026",

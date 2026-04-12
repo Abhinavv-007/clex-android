@@ -15,6 +15,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -45,6 +46,18 @@ data class ChainSession(
     val recordHash: String,
     val startedAt: Long,
     val fileCount: Int
+)
+
+data class ChainFileMeta(
+    val category: String,
+    val type: String,
+    val size: Long,
+    val hash: String?,
+)
+
+data class CreatedChainSession(
+    val sessionId: String,
+    val ledgerIndex: Int,
 )
 
 data class ChainEvent(
@@ -173,6 +186,79 @@ private data class EncryptedSecretPayload(
 )
 
 object ClexChainApi {
+    suspend fun registerChainId(chainId: String): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val payload = JSONObject().put("chain_id", chainId)
+            httpPostJson("${ClexBackendConfig.chainApiBaseUrl}/chain/register", payload.toString())
+        }.isSuccess
+    }
+
+    suspend fun createSession(
+        senderChainId: String,
+        route: String,
+        files: List<ChainFileMeta>,
+    ): CreatedChainSession? = withContext(Dispatchers.IO) {
+        runCatching {
+            val payload = JSONObject()
+                .put("sender_chain_id", senderChainId)
+                .put("route", route)
+                .put(
+                    "files",
+                    JSONArray().apply {
+                        files.forEach { file ->
+                            put(
+                                JSONObject()
+                                    .put("category", file.category)
+                                    .put("type", file.type)
+                                    .put("size", file.size)
+                                    .put("hash", file.hash)
+                            )
+                        }
+                    }
+                )
+
+            val response = httpPostJson("${ClexBackendConfig.chainApiBaseUrl}/chain/session", payload.toString())
+            CreatedChainSession(
+                sessionId = response.optString("session_id"),
+                ledgerIndex = response.optInt("ledger_index"),
+            ).takeIf { it.sessionId.isNotBlank() }
+        }.getOrNull()
+    }
+
+    suspend fun appendEvent(
+        sessionId: String,
+        status: String,
+        receiverChainId: String? = null,
+    ): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val payload = JSONObject().put("status", status).apply {
+                if (!receiverChainId.isNullOrBlank()) {
+                    put("receiver_chain_id", receiverChainId)
+                }
+            }
+            httpPostJson(
+                "${ClexBackendConfig.chainApiBaseUrl}/chain/session/${Uri.encode(sessionId)}/event",
+                payload.toString(),
+            )
+        }.isSuccess
+    }
+
+    fun hashBytes(bytes: ByteArray): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(bytes)
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    fun fileCategory(mimeType: String): String = when {
+        mimeType.startsWith("image/") -> "image"
+        mimeType == "application/pdf" -> "pdf"
+        mimeType.startsWith("video/") -> "video"
+        mimeType.startsWith("audio/") -> "audio"
+        mimeType.contains("zip") || mimeType.contains("archive") || mimeType.contains("tar") || mimeType.contains("gzip") -> "archive"
+        mimeType.contains("word") || mimeType.contains("document") || mimeType.contains("spreadsheet") || mimeType.contains("presentation") || mimeType.startsWith("text/") -> "document"
+        else -> "other"
+    }
+
     suspend fun fetchFeed(limit: Int = 5): ChainFeed = withContext(Dispatchers.IO) {
         val statsJson = httpGetJson("${ClexBackendConfig.chainApiBaseUrl}/chain/stats")
         val explorerJson = httpGetJson(

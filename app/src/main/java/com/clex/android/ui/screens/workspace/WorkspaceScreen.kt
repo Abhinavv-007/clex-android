@@ -262,7 +262,7 @@ private fun WorkspaceTopBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        PageMark(glyph = "⇄", title = "WORKSPACE")
+        PageMark(glyph = "◎", title = "WORKSPACE")
     }
 }
 
@@ -387,6 +387,7 @@ private fun LiveSendTab(
 
     // SendRoute state — UI-level route that wraps TransferMethod
     var sendRoute by remember { mutableStateOf(SendRoute.DIRECT) }
+    var clexLinkAutoStartAttempted by rememberSaveable { mutableStateOf(false) }
 
     // Nearby session state for Clex Link
     val nearbyState by nearbySession.sessionState.collectAsState()
@@ -399,6 +400,26 @@ private fun LiveSendTab(
             SendRoute.DIRECT -> controller.setMethod(TransferMethod.WEBRTC)
             SendRoute.LOCAL -> controller.setMethod(TransferMethod.LOCAL)
             SendRoute.CLEX_LINK -> { /* Method resolved after BLE negotiation */ }
+        }
+    }
+
+    LaunchedEffect(sendRoute) {
+        if (sendRoute != SendRoute.CLEX_LINK) {
+            clexLinkAutoStartAttempted = false
+        }
+    }
+
+    LaunchedEffect(sendRoute, nearbyState, clexLinkAutoStartAttempted) {
+        if (sendRoute == SendRoute.CLEX_LINK &&
+            !clexLinkAutoStartAttempted &&
+            nearbyState in listOf(
+                NearbySessionState.IDLE,
+                NearbySessionState.UNAVAILABLE,
+                NearbySessionState.CANCELLED,
+            )
+        ) {
+            clexLinkAutoStartAttempted = true
+            onEnsureNearbyReady()
         }
     }
 

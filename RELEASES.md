@@ -21,6 +21,19 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.5
+
+Public artifact names:
+
+- `Clex-1.9.5-universal.apk`
+- `Clex-1.9.5.aab`
+
+Release notes:
+
+- Fixed Clex Link readiness so choosing the nearby route now prompts BLE permissions and starts discovery on the device that should become visible.
+- Added Android chain session write instrumentation with receiver chain-ID handoff to the public ledger flow.
+- Expanded mobile ledger detail to show file category, MIME type, size, and hash metadata.
+
 ## v1.9.4
 
 Public artifact names:

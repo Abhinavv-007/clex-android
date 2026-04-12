@@ -51,6 +51,7 @@ data class TransferUiState(
     val state: TransferState = TransferState.IDLE,
     val method: TransferMethod = TransferMethod.WEBRTC,
     val roomCode: String = generateRoomCode(),
+    val peerChainId: String? = null,
     val shareExpiresAtMillis: Long? = null,
     val progress: Int = 0,
     val bytesSent: Long = 0L,

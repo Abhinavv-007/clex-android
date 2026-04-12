@@ -32,6 +32,7 @@ class WebRtcTransfer(
     private val roomCode: String,
     private val role: String,
     private val method: TransferMethod,
+    private val localChainId: String,
     private val stateMachine: TransferStateMachine,
     private val factory: PeerConnectionFactory,
     private val tempDir: File,
@@ -63,6 +64,7 @@ class WebRtcTransfer(
     }
 
     suspend fun initSender() {
+        stateMachine.setPeerChainId(null)
         stateMachine.setState(TransferState.PREPARING)
         val connectResult = signaling.connect(role = "sender", method = method)
         if (connectResult.isFailure) {
@@ -75,6 +77,7 @@ class WebRtcTransfer(
 
     suspend fun initReceiver() {
         stateMachine.setRoomCode(roomCode)
+        stateMachine.setPeerChainId(null)
         stateMachine.setState(TransferState.PREPARING)
         val connectResult = signaling.connect(role = "receiver", method = method)
         if (connectResult.isFailure) {
@@ -281,7 +284,10 @@ class WebRtcTransfer(
                 }
             }
 
-            override fun onMessage(buffer: DataChannel.Buffer) = Unit
+            override fun onMessage(buffer: DataChannel.Buffer) {
+                if (buffer.binary) return
+                handleSenderControlMessage(String(buffer.data.readRemainingBytes(), Charsets.UTF_8))
+            }
 
             override fun onBufferedAmountChange(previousAmount: Long) = Unit
         })
@@ -343,6 +349,11 @@ class WebRtcTransfer(
                 if (channel.state() == DataChannel.State.OPEN) {
                     cancelConnectionWatchdog()
                     stateMachine.setState(TransferState.TRANSFERRING)
+                    val receiverChainMessage = JSONObject()
+                        .put("type", "receiver-chain")
+                        .put("chainId", localChainId)
+                        .toString()
+                    channel.send(DataChannel.Buffer(ByteBuffer.wrap(receiverChainMessage.toByteArray()), false))
                 }
             }
 
@@ -406,6 +417,17 @@ class WebRtcTransfer(
             }
         } catch (_: Exception) {
             // Ignore malformed control payloads so a single bad message does not kill the session.
+        }
+    }
+
+    private fun handleSenderControlMessage(text: String) {
+        try {
+            val obj = JSONObject(text)
+            if (obj.optString("type") == "receiver-chain") {
+                stateMachine.setPeerChainId(obj.optString("chainId").takeIf { it.isNotBlank() })
+            }
+        } catch (_: Exception) {
+            // Ignore malformed sender-side peer metadata.
         }
     }
 

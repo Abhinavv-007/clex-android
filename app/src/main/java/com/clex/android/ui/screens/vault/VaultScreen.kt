@@ -144,7 +144,7 @@ private fun VaultTopBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        PageMark(glyph = "▣", title = "VAULT")
+        PageMark(glyph = "◈", title = "VAULT")
         TopBarStatusChip(text = "ENCRYPTED", accentColor = CxColors.success, showDot = true)
     }
 }

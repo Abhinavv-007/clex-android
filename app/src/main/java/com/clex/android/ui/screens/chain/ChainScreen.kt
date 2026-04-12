@@ -29,6 +29,7 @@ import com.clex.android.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 
 // ═══════════════════════════════════════════════════
 //  CLEX — Chain Screen
@@ -937,6 +938,45 @@ private fun String.toStatusColor(): Color {
     }
 }
 
+private data class ChainFileDetail(
+    val category: String,
+    val type: String,
+    val size: Long,
+    val hash: String?,
+)
+
+private fun JSONArray.toChainFileDetails(): List<ChainFileDetail> {
+    return buildList {
+        for (index in 0 until length()) {
+            val item = optJSONObject(index) ?: continue
+            add(
+                ChainFileDetail(
+                    category = item.optString("category").ifBlank { "other" },
+                    type = item.optString("type").ifBlank { "application/octet-stream" },
+                    size = item.optLong("size", 0L),
+                    hash = item.optString("hash").takeIf { it.isNotBlank() },
+                )
+            )
+        }
+    }
+}
+
+private fun formatLedgerBytes(bytes: Long): String {
+    if (bytes <= 0L) return "0 B"
+    val units = listOf("B", "KB", "MB", "GB", "TB")
+    var value = bytes.toDouble()
+    var unitIndex = 0
+    while (value >= 1024.0 && unitIndex < units.lastIndex) {
+        value /= 1024.0
+        unitIndex += 1
+    }
+    return if (unitIndex == 0) {
+        "${value.toLong()} ${units[unitIndex]}"
+    } else {
+        String.format("%.1f %s", value, units[unitIndex])
+    }
+}
+
 @Composable
 private fun LedgerRow(entry: LedgerEntry, onClick: () -> Unit = {}) {
     val colors = CxTheme.colors
@@ -1059,6 +1099,49 @@ private fun LedgerEntryDetailDialog(
                         ) {
                             MonoText(text = label, fontSize = CxTypography.textXs, color = colors.textTertiary)
                             MonoText(text = value, fontSize = CxTypography.textXs, color = colors.textSecondary)
+                        }
+                    }
+
+                    val parsedFiles = detail.files.toChainFileDetails()
+                    if (parsedFiles.isNotEmpty()) {
+                        Spacer(Modifier.height(CxSpacing.md))
+                        MonoText(
+                            text = "FILES",
+                            fontSize = CxTypography.textXs,
+                            fontWeight = CxTypography.weightBold,
+                            color = colors.accent
+                        )
+                        Spacer(Modifier.height(CxSpacing.sm))
+                        parsedFiles.forEachIndexed { index, file ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(colors.bgCard)
+                                    .border(1.dp, colors.borderSubtle, RoundedCornerShape(16.dp))
+                                    .padding(CxSpacing.md)
+                            ) {
+                                MonoText(
+                                    text = file.category.uppercase(),
+                                    fontSize = CxTypography.textXs,
+                                    fontWeight = CxTypography.weightBold,
+                                    color = colors.accent
+                                )
+                                Spacer(Modifier.height(CxSpacing.xs))
+                                BodyText(
+                                    text = "${file.type}  ·  ${formatLedgerBytes(file.size)}",
+                                    fontSize = CxTypography.textXs
+                                )
+                                Spacer(Modifier.height(CxSpacing.xs))
+                                MonoText(
+                                    text = file.hash?.take(12) ?: "HASH PENDING",
+                                    fontSize = CxTypography.textXs,
+                                    color = if (file.hash == null) colors.textTertiary else colors.textSecondary
+                                )
+                            }
+                            if (index < parsedFiles.lastIndex) {
+                                Spacer(Modifier.height(CxSpacing.sm))
+                            }
                         }
                     }
                 }

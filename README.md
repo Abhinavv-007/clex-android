@@ -6,15 +6,15 @@ This repo is the Android build only. It can be opened directly in Android Studio
 
 ## Current Release
 
-- Version: `1.9.4`
+- Version: `1.9.5`
 - Package: `com.clex.android`
 - Min SDK: `26`
 - Target SDK: `34`
 
 Distribution artifacts built locally from this project:
 
-- Universal APK: `dist/Clex-1.9.4-universal.apk`
-- Play bundle: `dist/Clex-1.9.4.aab`
+- Universal APK: `dist/Clex-1.9.5-universal.apk`
+- Play bundle: `dist/Clex-1.9.5.aab`
 
 ## What The App Includes
 
@@ -27,7 +27,7 @@ Distribution artifacts built locally from this project:
 - in-app Help, Privacy, and Changelog screens
 - deep-link handling for receive and vault secret flows
 - Android launcher, splash, and release packaging config
-- v1.9.4 Android sharesheet crash fix and add-on hardening
+- v1.9.5 Clex Link permission + chain parity pass
 
 ## Project Layout
 
@@ -94,12 +94,12 @@ Release outputs:
 For direct installs:
 
 - use the universal APK
-- public file name: `Clex-1.9.4-universal.apk`
+- public file name: `Clex-1.9.5-universal.apk`
 
 For Play Store upload:
 
 - use the `.aab` bundle
-- public file name: `Clex-1.9.4.aab`
+- public file name: `Clex-1.9.5.aab`
 
 See [RELEASES.md](RELEASES.md) for artifact names and signing notes.
 

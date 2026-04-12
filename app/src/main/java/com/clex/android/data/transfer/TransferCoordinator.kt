@@ -1,6 +1,9 @@
 package com.clex.android.data.transfer
 
 import android.content.Context
+import com.clex.android.data.ChainFileMeta
+import com.clex.android.data.ChainIdentityStore
+import com.clex.android.data.ClexChainApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,6 +40,7 @@ class TransferCoordinator(
             roomCode = roomCode,
             role = "sender",
             method = method,
+            localChainId = ChainIdentityStore.getOrCreate(context),
             stateMachine = stateMachine,
             factory = factory,
             tempDir = File(context.cacheDir, "clex-transfer"),
@@ -62,6 +66,7 @@ class TransferCoordinator(
             roomCode = roomCode,
             role = "receiver",
             method = method,
+            localChainId = ChainIdentityStore.getOrCreate(context),
             stateMachine = stateMachine,
             factory = factory,
             tempDir = File(context.cacheDir, "clex-transfer"),
@@ -110,9 +115,21 @@ class WorkspaceSenderController(private val context: Context) {
         factory = PeerConnectionFactoryHolder.get(context),
     )
     private val _files = MutableStateFlow<List<WorkspaceSelectedFile>>(emptyList())
+    private var activeChainSessionId: String? = null
+    private var lastObservedTransferState: TransferState = TransferState.IDLE
+    private var lastAppendedChainStatus: String? = null
+    private var lastReportedPeerChainId: String? = null
 
     val files: StateFlow<List<WorkspaceSelectedFile>> = _files.asStateFlow()
     val transferState: StateFlow<TransferUiState> = stateMachine.state
+
+    init {
+        scope.launch {
+            transferState.collectLatest { state ->
+                handleChainStateUpdate(state)
+            }
+        }
+    }
 
     fun setMethod(method: TransferMethod) {
         stateMachine.setMethod(method)
@@ -188,6 +205,8 @@ class WorkspaceSenderController(private val context: Context) {
                 return@launch
             }
 
+            prepareChainSession(method, payload)
+
             coordinator.startSender(
                 roomCode = normalizedCode,
                 method = method,
@@ -222,6 +241,83 @@ class WorkspaceSenderController(private val context: Context) {
             error = "This receive link expired after 1 minute. Start the transfer again to generate a new code.",
             diagnosticCode = "share_expired"
         )
+    }
+
+    private suspend fun prepareChainSession(method: TransferMethod, payload: List<TransferPayloadFile>) {
+        val senderChainId = ChainIdentityStore.getOrCreate(context)
+        ClexChainApi.registerChainId(senderChainId)
+
+        val chainFiles = withContext(Dispatchers.Default) {
+            payload.map { file ->
+                ChainFileMeta(
+                    category = ClexChainApi.fileCategory(file.mimeType),
+                    type = file.mimeType,
+                    size = file.bytes.size.toLong(),
+                    hash = ClexChainApi.hashBytes(file.bytes),
+                )
+            }
+        }
+
+        val createdSession = ClexChainApi.createSession(
+            senderChainId = senderChainId,
+            route = method.webValue,
+            files = chainFiles,
+        )
+
+        activeChainSessionId = createdSession?.sessionId
+        lastAppendedChainStatus = null
+        lastReportedPeerChainId = null
+
+        createdSession?.sessionId?.let { sessionId ->
+            if (ClexChainApi.appendEvent(sessionId, "waiting_peer")) {
+                lastAppendedChainStatus = "waiting_peer"
+            }
+        }
+    }
+
+    private suspend fun handleChainStateUpdate(state: TransferUiState) {
+        val previousState = lastObservedTransferState
+        lastObservedTransferState = state.state
+
+        val sessionId = activeChainSessionId
+        if (sessionId == null) {
+            return
+        }
+
+        val nextStatus = when (state.state) {
+            TransferState.WAITING_PEER -> "waiting_peer"
+            TransferState.CONNECTING -> "connecting"
+            TransferState.TRANSFERRING -> "transferring"
+            TransferState.COMPLETE -> "completed"
+            TransferState.FAILED -> "failed"
+            TransferState.IDLE -> if (previousState != TransferState.IDLE) "cancelled" else null
+            TransferState.PREPARING -> null
+        }
+
+        if (nextStatus == null) {
+            return
+        }
+
+        val peerChainId = state.peerChainId?.takeIf { it.matches(Regex("^[0-9a-f]{32}$")) }
+        val shouldAppend = nextStatus != lastAppendedChainStatus ||
+            (peerChainId != null && peerChainId != lastReportedPeerChainId)
+
+        if (!shouldAppend) {
+            return
+        }
+
+        if (ClexChainApi.appendEvent(sessionId, nextStatus, peerChainId)) {
+            lastAppendedChainStatus = nextStatus
+            if (peerChainId != null) {
+                lastReportedPeerChainId = peerChainId
+            }
+
+            if (nextStatus in setOf("completed", "failed", "cancelled")) {
+                activeChainSessionId = null
+                lastAppendedChainStatus = null
+                lastReportedPeerChainId = null
+            }
+        }
     }
 }
 

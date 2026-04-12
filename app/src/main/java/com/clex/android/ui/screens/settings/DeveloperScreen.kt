@@ -175,7 +175,7 @@ fun DeveloperScreen(onBack: () -> Unit) {
                         )
                         Spacer(Modifier.height(CxSpacing.xs))
                         BodyText(
-                            text = "Clex Link nearby handoff, Android Sharesheet interop, and verified release alignment for the 1.9.3 Android pass.",
+                            text = "Nearby discovery hardening, chain receiver-ID propagation, and richer live-ledger detail for the 1.9.5 Android release.",
                             textAlign = TextAlign.Start
                         )
                     }

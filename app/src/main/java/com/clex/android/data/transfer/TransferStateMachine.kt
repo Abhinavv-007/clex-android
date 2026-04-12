@@ -29,6 +29,7 @@ class TransferStateMachine {
                 method = method,
                 state = TransferState.IDLE,
                 shareExpiresAtMillis = null,
+                peerChainId = null,
                 error = null,
                 nearby = false,
                 connectionKind = ConnectionKind.UNKNOWN,
@@ -41,6 +42,10 @@ class TransferStateMachine {
 
     fun setRoomCode(roomCode: String) {
         _state.update { it.copy(roomCode = roomCode.trim().uppercase()) }
+    }
+
+    fun setPeerChainId(peerChainId: String?) {
+        _state.update { it.copy(peerChainId = peerChainId?.trim()?.lowercase()) }
     }
 
     fun setShareExpiry(durationMillis: Long) {
@@ -74,6 +79,7 @@ class TransferStateMachine {
             it.copy(
                 state = TransferState.FAILED,
                 shareExpiresAtMillis = null,
+                peerChainId = null,
                 error = error,
                 currentFile = null,
                 diagnosticCode = diagnosticCode ?: it.diagnosticCode,
@@ -87,6 +93,7 @@ class TransferStateMachine {
                 state = TransferState.FAILED,
                 roomCode = generateRoomCode(),
                 shareExpiresAtMillis = null,
+                peerChainId = null,
                 error = error,
                 currentFile = null,
                 diagnosticCode = diagnosticCode ?: it.diagnosticCode,
