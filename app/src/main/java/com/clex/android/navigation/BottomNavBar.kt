@@ -2,12 +2,15 @@ package com.clex.android.navigation
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -50,19 +53,13 @@ fun CxBottomNavBar(
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // Subtle top separator — blends with content
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(0.5.dp)
-                .background(colors.borderSubtle)
-        )
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colors.bgPrimary)
-                .padding(vertical = CxSpacing.sm)
+                .clip(RoundedCornerShape(28.dp))
+                .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.82f else 0.94f))
+                .border(1.dp, colors.borderSubtle, RoundedCornerShape(28.dp))
+                .padding(horizontal = 10.dp, vertical = CxSpacing.sm)
                 .drawBehind {
                     // Single sliding pill at the bottom of the row
                     val itemWidth = size.width / tabCount
@@ -97,7 +94,6 @@ fun CxBottomNavBar(
         Spacer(
             Modifier
                 .fillMaxWidth()
-                .background(colors.bgPrimary)
                 .windowInsetsPadding(WindowInsets.navigationBars)
         )
     }

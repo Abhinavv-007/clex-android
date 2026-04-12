@@ -10,10 +10,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -140,13 +142,15 @@ fun SectionLabel(
     val colors = CxTheme.colors
     Row(
         modifier = modifier
+            .clip(RoundedCornerShape(999.dp))
             .border(
-                width = CxBorders.thin,
-                color = colors.accent.copy(alpha = if (colors.isDark) 0.35f else 0.55f)
+                width = 1.dp,
+                color = colors.accent.copy(alpha = if (colors.isDark) 0.35f else 0.55f),
+                shape = RoundedCornerShape(999.dp)
             )
             .background(
-                if (colors.isDark) colors.accent.copy(alpha = 0.08f)
-                else colors.accent.copy(alpha = 0.10f)
+                if (colors.isDark) colors.bgCard.copy(alpha = 0.76f)
+                else colors.bgCard.copy(alpha = 0.92f)
             )
             .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,

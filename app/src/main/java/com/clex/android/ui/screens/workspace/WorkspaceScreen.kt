@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -24,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -175,38 +177,14 @@ private fun TabSelector(
 ) {
     val colors = CxTheme.colors
     val tabs = WorkspaceTab.entries
-    val tabCount = tabs.size
-    val selectedIndex = tabs.indexOf(currentTab).coerceAtLeast(0)
-
-    val animatedIndex by animateFloatAsState(
-        targetValue = selectedIndex.toFloat(),
-        animationSpec = CxSpringSpecs.panel(),
-        label = "tabPill"
-    )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.bgPrimary)
-            .drawBehind {
-                // Bottom border line
-                drawRect(
-                    color = colors.borderColor,
-                    topLeft = Offset(0f, size.height - 2.dp.toPx()),
-                    size = Size(size.width, 2.dp.toPx())
-                )
-                // Sliding accent pill
-                val itemWidth = size.width / tabCount
-                val pillWidth = 32.dp.toPx()
-                val pillHeight = 3.dp.toPx()
-                val x = animatedIndex * itemWidth + (itemWidth - pillWidth) / 2f
-                val y = size.height - pillHeight
-                drawRect(
-                    color = colors.accent,
-                    topLeft = Offset(x, y),
-                    size = Size(pillWidth, pillHeight)
-                )
-            }
+            .padding(horizontal = CxSpacing.screenHorizontal)
+            .clip(RoundedCornerShape(22.dp))
+            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.72f else 0.92f))
+            .border(1.dp, colors.borderSubtle, RoundedCornerShape(22.dp))
     ) {
         tabs.forEach { tab ->
             val isActive = tab == currentTab
@@ -214,6 +192,17 @@ private fun TabSelector(
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(
+                        if (isActive) colors.accent.copy(alpha = if (colors.isDark) 0.16f else 0.12f)
+                        else Color.Transparent
+                    )
+                    .border(
+                        width = if (isActive) 1.dp else 0.dp,
+                        color = if (isActive) colors.accent.copy(alpha = 0.42f) else Color.Transparent,
+                        shape = RoundedCornerShape(18.dp)
+                    )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -228,8 +217,6 @@ private fun TabSelector(
                     color = if (isActive) colors.accent else colors.textTertiary,
                     letterSpacing = CxTypography.textXs * 0.12
                 )
-                // Space so pill has room at bottom
-                Spacer(Modifier.height(8.dp))
             }
         }
     }

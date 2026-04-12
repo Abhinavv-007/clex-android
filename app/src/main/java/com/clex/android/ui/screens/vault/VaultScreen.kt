@@ -159,14 +159,10 @@ private fun VaultTabSelector(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.bgPrimary)
-            .drawBehind {
-                drawRect(
-                    color = colors.borderColor,
-                    topLeft = Offset(0f, size.height - 1.dp.toPx()),
-                    size = Size(size.width, 1.dp.toPx())
-                )
-            }
+            .padding(horizontal = CxSpacing.screenHorizontal)
+            .clip(RoundedCornerShape(22.dp))
+            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.72f else 0.92f))
+            .border(1.dp, colors.borderSubtle, RoundedCornerShape(22.dp))
     ) {
         VaultTab.entries.forEach { tab ->
             val isActive = tab == currentTab
@@ -176,15 +172,21 @@ private fun VaultTabSelector(
                 VaultTab.CLOUD -> "CLOUD"
                 VaultTab.SETTINGS -> "VAULT+"
             }
-            val indicatorAlpha by animateFloatAsState(
-                targetValue = if (isActive) 1f else 0f,
-                animationSpec = tween(200),
-                label = "vTabIndicator"
-            )
 
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .padding(4.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(
+                        if (isActive) colors.accent.copy(alpha = if (colors.isDark) 0.16f else 0.12f)
+                        else Color.Transparent
+                    )
+                    .border(
+                        width = if (isActive) 1.dp else 0.dp,
+                        color = if (isActive) colors.accent.copy(alpha = 0.42f) else Color.Transparent,
+                        shape = RoundedCornerShape(18.dp)
+                    )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -200,13 +202,6 @@ private fun VaultTabSelector(
                     color = if (isActive) colors.accent else colors.textTertiary,
                     letterSpacing = CxTypography.textXs * 0.08,
                     maxLines = 1
-                )
-                Spacer(Modifier.height(6.dp))
-                Box(
-                    Modifier
-                        .width(24.dp)
-                        .height(2.dp)
-                        .background(colors.accent.copy(alpha = indicatorAlpha))
                 )
             }
         }

@@ -243,7 +243,9 @@ private fun ThemeToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.bgCard)
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.76f else 0.92f))
+            .border(1.dp, colors.borderSubtle, RoundedCornerShape(24.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -322,7 +324,9 @@ private fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.bgCard)
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.76f else 0.92f))
+            .border(1.dp, colors.borderSubtle, RoundedCornerShape(24.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

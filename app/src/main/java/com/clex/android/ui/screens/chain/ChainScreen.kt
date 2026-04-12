@@ -288,8 +288,8 @@ private fun ChainHeroStatCard(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(colors.bgCard)
-            .border(CxBorders.thin, colors.borderSubtle, RoundedCornerShape(20.dp))
+            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.76f else 0.92f))
+            .border(1.dp, accent.copy(alpha = if (colors.isDark) 0.24f else 0.34f), RoundedCornerShape(20.dp))
             .padding(CxSpacing.md)
     ) {
         MonoText(
@@ -505,7 +505,7 @@ private fun ChainFlowCard(
             .clip(RoundedCornerShape(20.dp))
             .background(
                 if (step.status == StepStatus.ACTIVE) colors.accent.copy(alpha = if (colors.isDark) 0.14f else 0.12f)
-                else colors.bgCard
+                else colors.bgCard.copy(alpha = if (colors.isDark) 0.76f else 0.92f)
             )
             .border(1.dp, if (step.status == StepStatus.ACTIVE) accent.copy(alpha = 0.65f) else colors.borderSubtle, RoundedCornerShape(20.dp))
             .clickable(
@@ -559,7 +559,10 @@ private fun PopularChainRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(if (selected) colors.accent.copy(alpha = if (colors.isDark) 0.14f else 0.10f) else colors.bgCard)
+            .background(
+                if (selected) colors.accent.copy(alpha = if (colors.isDark) 0.14f else 0.10f)
+                else colors.bgCard.copy(alpha = if (colors.isDark) 0.76f else 0.92f)
+            )
             .border(
                 1.dp,
                 if (selected) colors.accent.copy(alpha = 0.6f) else colors.borderSubtle,

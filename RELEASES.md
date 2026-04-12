@@ -21,15 +21,15 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
-## v1.9.1
+## v1.9.2
 
 Public artifact names:
 
-- `Clex-1.9.1-universal.apk`
-- `Clex-1.9.1.aab`
+- `Clex-1.9.2-universal.apk`
+- `Clex-1.9.2.aab`
 
 Release notes:
 
-- Fixed Android onboarding slide overflow by making setup/tutorial pages scrollable.
-- Updated About the Developer with Abhinav Raj, Instagram, LinkedIn, current Clex emails, and experience websites.
-- Includes the v1.9.1 transfer stability, portrait QR scanning, large-receive crash protection, and release metadata alignment work.
+- Applied a glass-style shell pass to Android with softer segmented tabs, chips, labels, and bottom navigation surfaces.
+- Brightened the light-theme accent system so selected states read more clearly outside dark mode.
+- Aligned the Android release metadata and packaging with the cleaned iOS 1.9.2 content update.

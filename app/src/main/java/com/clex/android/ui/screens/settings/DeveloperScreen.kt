@@ -175,7 +175,7 @@ fun DeveloperScreen(onBack: () -> Unit) {
                         )
                         Spacer(Modifier.height(CxSpacing.xs))
                         BodyText(
-                            text = "Transfer stability, portrait QR scanning, developer contact details, and release metadata alignment for the 1.9.1 pass.",
+                            text = "Glass-shell refinement, brighter light-mode accents, and release metadata alignment for the 1.9.2 pass.",
                             textAlign = TextAlign.Start
                         )
                     }

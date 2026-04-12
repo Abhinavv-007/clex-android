@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.1"
-    const val versionCode = 191
+    const val versionName = "1.9.2"
+    const val versionCode = 192
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.2",
+            releasedOn = "12 Apr 2026",
+            notes = listOf(
+                "Applied a glass-style shell pass to the Android app with softer segmented tabs, chips, labels, and bottom navigation surfaces.",
+                "Brightened the light-theme accent system so selected states read more clearly outside dark mode.",
+                "Aligned mobile release metadata to v1.9.2 and synced the visual pass with the cleaned iOS content update."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.1",
             releasedOn = "12 Apr 2026",

@@ -53,10 +53,14 @@ fun PageMark(
     ) {
         Box(
             modifier = Modifier
-                .size(30.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(colors.accent.copy(alpha = if (colors.isDark) 0.14f else 0.12f))
-                .border(1.dp, colors.accent.copy(alpha = if (colors.isDark) 0.36f else 0.52f), RoundedCornerShape(10.dp)),
+                .size(34.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.76f else 0.92f))
+                .border(
+                    1.dp,
+                    colors.accent.copy(alpha = if (colors.isDark) 0.32f else 0.48f),
+                    RoundedCornerShape(14.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             MonoText(
@@ -88,9 +92,13 @@ fun TopBarStatusChip(
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(accentColor.copy(alpha = if (colors.isDark) 0.16f else 0.14f))
-            .border(1.dp, accentColor.copy(alpha = if (colors.isDark) 0.42f else 0.72f), RoundedCornerShape(999.dp))
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.74f else 0.92f))
+            .border(
+                1.dp,
+                accentColor.copy(alpha = if (colors.isDark) 0.34f else 0.52f),
+                RoundedCornerShape(999.dp)
+            )
+            .padding(horizontal = 13.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
