@@ -36,7 +36,7 @@ data class ReceivedFile(
     val name: String,
     val mimeType: String,
     val size: Long,
-    val bytes: ByteArray,
+    val tempFilePath: String,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -16,6 +16,7 @@ import com.clex.android.ui.screens.help.HelpFaqScreen
 import com.clex.android.ui.screens.home.HomeScreen
 import com.clex.android.ui.screens.onboarding.OnboardingScreen
 import com.clex.android.ui.screens.settings.ChangelogScreen
+import com.clex.android.ui.screens.settings.DeveloperScreen
 import com.clex.android.ui.screens.settings.PrivacyScreen
 import com.clex.android.ui.screens.settings.SettingsScreen
 import com.clex.android.ui.screens.splash.SplashScreen
@@ -156,6 +157,9 @@ fun AppNavHost(
                 },
                 onNavigateToChangelog = {
                     navController.navigate(Screen.Changelog.route)
+                },
+                onNavigateToDeveloper = {
+                    navController.navigate(Screen.Developer.route)
                 }
             )
         }
@@ -182,6 +186,10 @@ fun AppNavHost(
 
         composable(Screen.Changelog.route) {
             ChangelogScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.Developer.route) {
+            DeveloperScreen(onBack = { navController.popBackStack() })
         }
     }
 }

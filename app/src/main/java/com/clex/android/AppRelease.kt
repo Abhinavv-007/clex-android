@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.8.2"
-    const val versionCode = 182
+    const val versionName = "1.9.1"
+    const val versionCode = 191
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.1",
+            releasedOn = "12 Apr 2026",
+            notes = listOf(
+                "Moved Android receive handling to temp-file storage so large transfers no longer keep full payloads in Compose state.",
+                "Improved transfer connection messaging, portrait QR scanning, and local-route negotiation behavior.",
+                "Added a filled developer profile, sharper settings branding, and aligned the mobile release to v1.9.1."
+            )
+        ),
         ChangelogEntry(
             version = "1.8.2",
             releasedOn = "11 Apr 2026",

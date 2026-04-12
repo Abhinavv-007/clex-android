@@ -44,7 +44,8 @@ import com.clex.android.ui.theme.*
 fun SettingsScreen(
     onNavigateToHelp: () -> Unit = {},
     onNavigateToPrivacy: () -> Unit = {},
-    onNavigateToChangelog: () -> Unit = {}
+    onNavigateToChangelog: () -> Unit = {},
+    onNavigateToDeveloper: () -> Unit = {}
 ) {
     val colors = CxTheme.colors
     val isDark = ThemeManager.isDark
@@ -158,6 +159,14 @@ fun SettingsScreen(
                             trailingIcon = "→",
                             onClick = onNavigateToPrivacy
                         )
+
+                        SettingsRow(
+                            icon = "◉",
+                            title = "ABOUT THE DEVELOPER",
+                            subtitle = "Links, email, and release contact",
+                            trailingIcon = "→",
+                            onClick = onNavigateToDeveloper
+                        )
                     }
                 }
 
@@ -201,7 +210,7 @@ fun SettingsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        BrandLogoImage(size = 72.dp)
+                        BrandLogoImage(size = 56.dp)
                         BodyText(
                             text = "DROP  ·  PREPARE  ·  SHARE",
                             fontSize = CxTypography.textXs,

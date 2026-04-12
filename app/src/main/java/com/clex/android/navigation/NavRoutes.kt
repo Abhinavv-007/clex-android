@@ -16,6 +16,7 @@ sealed class Screen(val route: String) {
     data object HelpFaq : Screen("help")
     data object Privacy : Screen("privacy")
     data object Changelog : Screen("changelog")
+    data object Developer : Screen("developer")
 }
 
 // Bottom nav items — 4 primary destinations

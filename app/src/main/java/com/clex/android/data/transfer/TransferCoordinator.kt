@@ -13,12 +13,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.PeerConnectionFactory
+import java.io.File
 import java.util.UUID
 
 private const val SIGNALING_BASE_URL = "wss://signal.clex.in"
 private const val SHARE_WAIT_TIMEOUT_MS = 60_000L
 
 class TransferCoordinator(
+    private val context: Context,
     private val stateMachine: TransferStateMachine,
     private val factory: PeerConnectionFactory,
 ) {
@@ -37,6 +39,7 @@ class TransferCoordinator(
             method = method,
             stateMachine = stateMachine,
             factory = factory,
+            tempDir = File(context.cacheDir, "clex-transfer"),
         )
         transfer.prepareFiles(
             files.map {
@@ -61,6 +64,7 @@ class TransferCoordinator(
             method = method,
             stateMachine = stateMachine,
             factory = factory,
+            tempDir = File(context.cacheDir, "clex-transfer"),
         )
         activeTransfer = transfer
         transfer.initReceiver()
@@ -101,6 +105,7 @@ class WorkspaceSenderController(private val context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val stateMachine = TransferStateMachine()
     private val coordinator = TransferCoordinator(
+        context = context,
         stateMachine = stateMachine,
         factory = PeerConnectionFactoryHolder.get(context),
     )
@@ -209,6 +214,7 @@ class WorkspaceReceiverController(private val context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val stateMachine = TransferStateMachine()
     private val coordinator = TransferCoordinator(
+        context = context,
         stateMachine = stateMachine,
         factory = PeerConnectionFactoryHolder.get(context),
     )
@@ -244,6 +250,7 @@ class WorkspaceReceiverController(private val context: Context) {
             return
         }
 
+        cleanupReceivedFiles(transferState.value.receivedFiles)
         coordinator.destroy()
         _saveMessage.value = null
         lastSavedTransferKey = null
@@ -260,6 +267,7 @@ class WorkspaceReceiverController(private val context: Context) {
 
     fun reset() {
         val method = transferState.value.method
+        cleanupReceivedFiles(transferState.value.receivedFiles)
         coordinator.destroy()
         stateMachine.reset()
         if (method != TransferMethod.WEBRTC) {
@@ -279,6 +287,7 @@ class WorkspaceReceiverController(private val context: Context) {
     }
 
     fun dispose() {
+        cleanupReceivedFiles(transferState.value.receivedFiles)
         coordinator.destroy()
         scope.cancel()
     }
@@ -288,7 +297,7 @@ class WorkspaceReceiverController(private val context: Context) {
         runCatching {
             withContext(Dispatchers.IO) {
                 files.forEach { file ->
-                    saveToDownloads(file.name, file.mimeType, file.bytes)
+                    saveToDownloads(file.name, file.mimeType, File(file.tempFilePath))
                 }
             }
         }.onSuccess {
@@ -298,7 +307,9 @@ class WorkspaceReceiverController(private val context: Context) {
         }
     }
 
-    private fun saveToDownloads(displayName: String, mimeType: String, bytes: ByteArray) {
+    private fun saveToDownloads(displayName: String, mimeType: String, sourceFile: File) {
+        require(sourceFile.exists()) { "The received file is no longer available to save." }
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             val resolver = context.contentResolver
             val values = android.content.ContentValues().apply {
@@ -315,8 +326,10 @@ class WorkspaceReceiverController(private val context: Context) {
                 ?: error("Could not create a Downloads entry.")
 
             runCatching {
-                resolver.openOutputStream(uri)?.use { output -> output.write(bytes) }
-                    ?: error("Could not open the Downloads output stream.")
+                sourceFile.inputStream().use { input ->
+                    resolver.openOutputStream(uri)?.use { output -> input.copyTo(output) }
+                        ?: error("Could not open the Downloads output stream.")
+                }
                 val publish = android.content.ContentValues().apply {
                     put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
                 }
@@ -329,9 +342,17 @@ class WorkspaceReceiverController(private val context: Context) {
         }
 
         val downloadsRoot = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-            ?: java.io.File(context.filesDir, "downloads-fallback")
-        val clexDir = java.io.File(downloadsRoot, "Clex Received").also { it.mkdirs() }
-        java.io.File(clexDir, displayName).writeBytes(bytes)
+            ?: File(context.filesDir, "downloads-fallback")
+        val clexDir = File(downloadsRoot, "Clex Received").also { it.mkdirs() }
+        sourceFile.inputStream().use { input ->
+            File(clexDir, displayName).outputStream().use { output -> input.copyTo(output) }
+        }
+    }
+
+    private fun cleanupReceivedFiles(files: List<ReceivedFile>) {
+        files.forEach { file ->
+            runCatching { File(file.tempFilePath).delete() }
+        }
     }
 }
 

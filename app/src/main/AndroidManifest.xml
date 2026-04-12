@@ -17,6 +17,12 @@
         android:theme="@style/Theme.Clex">
 
         <activity
+            android:name=".ui.scan.PortraitQrCaptureActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Clex" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"

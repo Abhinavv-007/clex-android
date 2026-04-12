@@ -2,15 +2,21 @@ package com.clex.android.data.tools
 
 import android.net.Uri
 
-enum class WorkspaceToolId(val webId: String) {
-    IMAGE_COMPRESS("image-compress"),
-    IMAGE_CONVERT("image-convert"),
-    PDF_MERGE("pdf-merge"),
-    PDF_SPLIT("pdf-split"),
-    PDF_TO_IMAGE("pdf-to-image"),
-    WORD_TO_PDF("word-to-pdf"),
-    ZIP("zip"),
-    SMART_CHAIN("smart-chain"),
+enum class WorkspaceToolId(
+    val webId: String,
+    val displayTitle: String,
+) {
+    IMAGE_COMPRESS("image-compress", "IMAGE COMPRESS"),
+    IMAGE_CONVERT("image-convert", "FORMAT CONVERT"),
+    IMAGE_TO_WEBP("image-to-webp", "IMAGE → WEBP"),
+    IMAGE_TO_JPEG("image-to-jpeg", "IMAGE → JPEG"),
+    IMAGE_TO_PNG("image-to-png", "IMAGE → PNG"),
+    PDF_MERGE("pdf-merge", "PDF MERGE"),
+    PDF_SPLIT("pdf-split", "PDF SPLIT"),
+    PDF_TO_IMAGE("pdf-to-image", "PDF → IMAGE"),
+    WORD_TO_PDF("word-to-pdf", "DOCX → PDF"),
+    ZIP("zip", "ZIP BUNDLE"),
+    SMART_CHAIN("smart-chain", "SMART CHAIN"),
 }
 
 data class WorkspaceToolFile(

@@ -412,8 +412,8 @@ private fun LiveSendTab(
 
             transferState.state == TransferState.CONNECTING -> {
                 ConnectingPanel(
-                    title = "PEER CONNECTED",
-                    subtitle = "Negotiating the secure data channel now."
+                    title = "ESTABLISHING CONNECTION",
+                    subtitle = "Finding the best route between devices now. Keep both devices awake and on the same network for Local mode."
                 )
             }
 
@@ -514,7 +514,9 @@ private fun LiveReceiveTab(
                             setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE)
                             setPrompt("Scan the sender's QR code")
                             setBeepEnabled(false)
-                            setOrientationLocked(true)
+                            setBarcodeImageEnabled(false)
+                            setOrientationLocked(false)
+                            setCaptureActivity(com.clex.android.ui.scan.PortraitQrCaptureActivity::class.java)
                         }
                         qrScanLauncher.launch(options)
                     },
@@ -555,8 +557,8 @@ private fun LiveReceiveTab(
 
             TransferState.CONNECTING -> {
                 ConnectingPanel(
-                    title = "LINKING DEVICES",
-                    subtitle = "The sender is online. Building the transfer route now."
+                    title = "ESTABLISHING CONNECTION",
+                    subtitle = "Finding the best route between devices now. Keep both devices awake and on the same network for Local mode."
                 )
             }
 
@@ -1962,7 +1964,10 @@ private fun ToolResultPanel(
 
 private fun toolMimeFilters(toolId: WorkspaceToolId): Array<String> = when (toolId) {
     WorkspaceToolId.IMAGE_COMPRESS,
-    WorkspaceToolId.IMAGE_CONVERT -> arrayOf("image/*")
+    WorkspaceToolId.IMAGE_CONVERT,
+    WorkspaceToolId.IMAGE_TO_WEBP,
+    WorkspaceToolId.IMAGE_TO_JPEG,
+    WorkspaceToolId.IMAGE_TO_PNG -> arrayOf("image/*")
     WorkspaceToolId.PDF_MERGE,
     WorkspaceToolId.PDF_SPLIT,
     WorkspaceToolId.PDF_TO_IMAGE -> arrayOf("application/pdf")

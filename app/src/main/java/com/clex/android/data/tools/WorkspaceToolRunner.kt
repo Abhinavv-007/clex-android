@@ -68,20 +68,37 @@ class WorkspaceToolRunner(private val context: Context) {
 
             WorkspaceToolId.IMAGE_CONVERT -> {
                 val file = files.first()
-                val inputBytes = readBytes(file)
-                val result = ImageConvertTool.convert(
-                    inputBytes = inputBytes,
+                runImageConvert(
+                    file = file,
                     target = ImageConvertTool.TargetFormat.WEBP,
-                    onProgress = ::setProgress
-                ).getOrThrow()
-                val outputName = swapExtension(file.name, result.extension)
-                WorkspaceToolResult(
                     toolId = toolId,
-                    inputFileIds = listOf(file.id),
-                    outputBytes = result.bytes,
-                    outputName = outputName,
-                    outputType = result.mimeType,
-                    suggestions = ToolChainSuggestions.getSuggestions(result.mimeType, 1)
+                )
+            }
+
+            WorkspaceToolId.IMAGE_TO_WEBP -> {
+                val file = files.first()
+                runImageConvert(
+                    file = file,
+                    target = ImageConvertTool.TargetFormat.WEBP,
+                    toolId = toolId,
+                )
+            }
+
+            WorkspaceToolId.IMAGE_TO_JPEG -> {
+                val file = files.first()
+                runImageConvert(
+                    file = file,
+                    target = ImageConvertTool.TargetFormat.JPEG,
+                    toolId = toolId,
+                )
+            }
+
+            WorkspaceToolId.IMAGE_TO_PNG -> {
+                val file = files.first()
+                runImageConvert(
+                    file = file,
+                    target = ImageConvertTool.TargetFormat.PNG,
+                    toolId = toolId,
                 )
             }
 
@@ -193,6 +210,28 @@ class WorkspaceToolRunner(private val context: Context) {
     private suspend fun readBytes(file: WorkspaceToolFile): ByteArray = withContext(Dispatchers.IO) {
         context.contentResolver.openInputStream(file.uri)?.use { it.readBytes() }
             ?: error("Could not read ${file.name}.")
+    }
+
+    private suspend fun runImageConvert(
+        file: WorkspaceToolFile,
+        target: ImageConvertTool.TargetFormat,
+        toolId: WorkspaceToolId,
+    ): WorkspaceToolResult {
+        val inputBytes = readBytes(file)
+        val result = ImageConvertTool.convert(
+            inputBytes = inputBytes,
+            target = target,
+            onProgress = ::setProgress
+        ).getOrThrow()
+        val outputName = swapExtension(file.name, result.extension)
+        return WorkspaceToolResult(
+            toolId = toolId,
+            inputFileIds = listOf(file.id),
+            outputBytes = result.bytes,
+            outputName = outputName,
+            outputType = result.mimeType,
+            suggestions = ToolChainSuggestions.getSuggestions(result.mimeType, 1)
+        )
     }
 
     private fun requirePdf(file: WorkspaceToolFile): WorkspaceToolFile {
