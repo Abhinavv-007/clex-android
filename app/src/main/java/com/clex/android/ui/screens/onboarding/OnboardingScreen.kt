@@ -21,7 +21,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -243,12 +245,14 @@ private fun OnboardingSlidePage(
 ) {
     val colors = CxTheme.colors
     val visible = rememberEntryVisibility("${slide.step}-$isActive")
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
             .padding(horizontal = CxSpacing.screenHorizontal)
-            .padding(top = 96.dp, bottom = 172.dp)
+            .padding(top = 96.dp, bottom = 220.dp)
     ) {
         RevealFromBottom(visible = visible, delayMs = 0) {
             OnboardingStepChip(step = slide.step, accent = slide.accent)
@@ -310,6 +314,8 @@ private fun OnboardingSlidePage(
                 Spacer(Modifier.height(CxSpacing.sm))
             }
         }
+
+        Spacer(Modifier.height(CxSpacing.xl))
     }
 }
 

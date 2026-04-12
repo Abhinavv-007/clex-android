@@ -21,7 +21,15 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
-Suggested public names:
+## v1.9.1
 
-- `Clex-1.8.2-universal.apk`
-- `Clex-1.8.2.aab`
+Public artifact names:
+
+- `Clex-1.9.1-universal.apk`
+- `Clex-1.9.1.aab`
+
+Release notes:
+
+- Fixed Android onboarding slide overflow by making setup/tutorial pages scrollable.
+- Updated About the Developer with Abhinav Raj, Instagram, LinkedIn, current Clex emails, and experience websites.
+- Includes the v1.9.1 transfer stability, portrait QR scanning, large-receive crash protection, and release metadata alignment work.
