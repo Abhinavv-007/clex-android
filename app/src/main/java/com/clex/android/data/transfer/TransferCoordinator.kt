@@ -118,6 +118,13 @@ class WorkspaceSenderController(private val context: Context) {
         stateMachine.setMethod(method)
     }
 
+    fun setRoomCode(roomCode: String) {
+        val normalizedCode = roomCode.trim().uppercase()
+        if (isValidRoomCode(normalizedCode)) {
+            stateMachine.setRoomCode(normalizedCode)
+        }
+    }
+
     fun addFiles(uris: List<android.net.Uri>) {
         scope.launch {
             val newEntries = withContext(Dispatchers.IO) {
@@ -143,15 +150,23 @@ class WorkspaceSenderController(private val context: Context) {
         resetTransfer()
     }
 
-    fun startTransfer() {
+    fun startTransfer(roomCode: String = transferState.value.roomCode, overrideMethod: TransferMethod? = null) {
         scope.launch {
             val selectedFiles = _files.value
-            val method = transferState.value.method
+            val normalizedCode = roomCode.trim().uppercase()
+            val method = overrideMethod ?: transferState.value.method
             if (selectedFiles.isEmpty()) {
                 stateMachine.setError("Add at least one file before starting the transfer.", "no_files")
                 return@launch
             }
 
+            if (!isValidRoomCode(normalizedCode)) {
+                stateMachine.setError("Generate a valid transfer code before starting the transfer.", "invalid_room_code")
+                return@launch
+            }
+
+            stateMachine.setMethod(method)
+            stateMachine.setRoomCode(normalizedCode)
             stateMachine.setState(TransferState.PREPARING)
             val payload = withContext(Dispatchers.IO) {
                 selectedFiles.mapNotNull { file ->
@@ -174,7 +189,7 @@ class WorkspaceSenderController(private val context: Context) {
             }
 
             coordinator.startSender(
-                roomCode = stateMachine.state.value.roomCode,
+                roomCode = normalizedCode,
                 method = method,
                 files = payload,
             )

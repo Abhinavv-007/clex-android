@@ -1,5 +1,6 @@
 package com.clex.android.ui.screens.workspace
 
+import android.bluetooth.BluetoothAdapter
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -44,6 +45,13 @@ import com.clex.android.data.AppLinkStore
 import com.clex.android.data.tools.WorkspaceToolId
 import com.clex.android.data.tools.WorkspaceToolResult
 import com.clex.android.data.tools.WorkspaceToolRunner
+import com.clex.android.data.transfer.NearbyDevice
+import com.clex.android.data.transfer.NearbyInvite
+import com.clex.android.data.transfer.NearbySession
+import com.clex.android.data.transfer.NearbySessionState
+import com.clex.android.data.transfer.ResolvedTransferRoute
+import com.clex.android.data.transfer.SendRoute
+import com.clex.android.data.transfer.SharesheetHelper
 import com.clex.android.data.transfer.TransferMethod
 import com.clex.android.data.transfer.TransferState
 import com.clex.android.data.transfer.TransferUiState
@@ -57,6 +65,7 @@ import com.clex.android.ui.effects.MeshGradientBackground
 import com.clex.android.ui.effects.ParticleField
 import com.clex.android.ui.theme.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // ═══════════════════════════════════════════════════
 //  CLEX — Workspace Screen
@@ -81,6 +90,9 @@ fun WorkspaceScreen() {
     val receiverController = remember(context) {
         WorkspaceReceiverController(context.applicationContext)
     }
+    val nearbySession = remember(context) {
+        NearbySession(context.applicationContext)
+    }
     val filePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
@@ -88,11 +100,65 @@ fun WorkspaceScreen() {
             senderController.addFiles(uris)
         }
     }
+    val pendingInboundShare by AppLinkStore.pendingInboundShare.collectAsState()
+    val nearbyState by nearbySession.sessionState.collectAsState()
+    var pendingNearbyStart by remember { mutableStateOf(false) }
+    var receiveAutoStartAttempted by rememberSaveable { mutableStateOf(false) }
+    val bluetoothEnableLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (nearbySession.isBluetoothEnabled()) {
+            if (pendingNearbyStart) {
+                nearbySession.startDiscovery()
+            }
+        } else {
+            nearbySession.stopDiscovery()
+        }
+        pendingNearbyStart = false
+    }
+    val blePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        val granted = grants.values.all { it }
+        if (!granted) {
+            nearbySession.stopDiscovery()
+            pendingNearbyStart = false
+            return@rememberLauncherForActivityResult
+        }
 
-    DisposableEffect(senderController, receiverController) {
+        if (nearbySession.isBluetoothEnabled()) {
+            if (pendingNearbyStart) {
+                nearbySession.startDiscovery()
+            }
+            pendingNearbyStart = false
+        } else {
+            bluetoothEnableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+        }
+    }
+
+    fun ensureNearbyReady() {
+        val missingPermissions = nearbySession.missingBlePermissions()
+        if (missingPermissions.isNotEmpty()) {
+            pendingNearbyStart = true
+            blePermissionLauncher.launch(missingPermissions.toTypedArray())
+            return
+        }
+
+        if (!nearbySession.isBluetoothEnabled()) {
+            pendingNearbyStart = true
+            bluetoothEnableLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            return
+        }
+
+        pendingNearbyStart = false
+        nearbySession.startDiscovery()
+    }
+
+    DisposableEffect(senderController, receiverController, nearbySession) {
         onDispose {
             senderController.dispose()
             receiverController.dispose()
+            nearbySession.destroy()
         }
     }
 
@@ -101,6 +167,33 @@ fun WorkspaceScreen() {
         currentTab = WorkspaceTab.RECEIVE
         receiverController.setMethod(pendingReceive.method)
         receiverController.connect(pendingReceive.roomCode)
+    }
+
+    // Handle files shared from external apps into Clex
+    LaunchedEffect(pendingInboundShare) {
+        val inbound = pendingInboundShare ?: return@LaunchedEffect
+        currentTab = WorkspaceTab.SEND
+        senderController.addFiles(AppLinkStore.consumeInboundShare() ?: inbound)
+    }
+
+    LaunchedEffect(currentTab) {
+        if (currentTab != WorkspaceTab.RECEIVE) {
+            receiveAutoStartAttempted = false
+        }
+    }
+
+    LaunchedEffect(currentTab, nearbyState, receiveAutoStartAttempted) {
+        if (currentTab == WorkspaceTab.RECEIVE &&
+            !receiveAutoStartAttempted &&
+            nearbyState in listOf(
+                NearbySessionState.IDLE,
+                NearbySessionState.UNAVAILABLE,
+                NearbySessionState.CANCELLED,
+            )
+        ) {
+            receiveAutoStartAttempted = true
+            ensureNearbyReady()
+        }
     }
 
     Box(
@@ -142,10 +235,13 @@ fun WorkspaceScreen() {
                     when (tab) {
                         WorkspaceTab.SEND -> LiveSendTab(
                             controller = senderController,
+                            nearbySession = nearbySession,
+                            onEnsureNearbyReady = ::ensureNearbyReady,
                             onPickFiles = { filePicker.launch(arrayOf("*/*")) }
                         )
                         WorkspaceTab.RECEIVE -> LiveReceiveTab(
-                            controller = receiverController
+                            controller = receiverController,
+                            nearbySession = nearbySession
                         )
                         WorkspaceTab.TOOLS -> ToolsTab()
                     }
@@ -273,9 +369,12 @@ private fun SendTab(
 @Composable
 private fun LiveSendTab(
     controller: WorkspaceSenderController,
+    nearbySession: NearbySession,
+    onEnsureNearbyReady: () -> Unit,
     onPickFiles: () -> Unit,
 ) {
     val context = LocalContext.current
+    val uiScope = rememberCoroutineScope()
     val files by controller.files.collectAsState()
     val transferState by controller.transferState.collectAsState()
     val scrollState = rememberScrollState()
@@ -284,6 +383,29 @@ private fun LiveSendTab(
     }
     var secondsRemaining by remember(transferState.shareExpiresAtMillis, transferState.state) {
         mutableIntStateOf(transferState.shareExpiresAtMillis.remainingShareSeconds())
+    }
+
+    // SendRoute state — UI-level route that wraps TransferMethod
+    var sendRoute by remember { mutableStateOf(SendRoute.DIRECT) }
+
+    // Nearby session state for Clex Link
+    val nearbyState by nearbySession.sessionState.collectAsState()
+    val nearbyDevices by nearbySession.nearbyDevices.collectAsState()
+    val resolvedRoute by nearbySession.resolvedRoute.collectAsState()
+
+    // When send route changes, sync underlying TransferMethod
+    LaunchedEffect(sendRoute) {
+        when (sendRoute) {
+            SendRoute.DIRECT -> controller.setMethod(TransferMethod.WEBRTC)
+            SendRoute.LOCAL -> controller.setMethod(TransferMethod.LOCAL)
+            SendRoute.CLEX_LINK -> { /* Method resolved after BLE negotiation */ }
+        }
+    }
+
+    // When Clex Link resolves a route, hand it off to controller
+    LaunchedEffect(resolvedRoute) {
+        val route = resolvedRoute ?: return@LaunchedEffect
+        controller.startTransfer(roomCode = route.roomCode, overrideMethod = route.method)
     }
 
     LaunchedEffect(transferState.shareExpiresAtMillis, transferState.state, transferState.roomCode) {
@@ -316,22 +438,28 @@ private fun LiveSendTab(
     ) {
         when {
             files.isEmpty() -> {
-                SectionLabel(text = if (transferState.method == TransferMethod.LOCAL) "Local Transfer" else "Direct Transfer")
+                SectionLabel(
+                    text = when (sendRoute) {
+                        SendRoute.DIRECT -> "Direct Transfer"
+                        SendRoute.LOCAL -> "Local Transfer"
+                        SendRoute.CLEX_LINK -> "Clex Link"
+                    }
+                )
                 Spacer(Modifier.height(CxSpacing.lg))
-                TransferRouteSelector(
-                    selectedMethod = transferState.method,
-                    onSelect = controller::setMethod
+                SendRouteSelector(
+                    selectedRoute = sendRoute,
+                    onSelect = { sendRoute = it }
                 )
                 Spacer(Modifier.height(CxSpacing.lg))
                 DropZone(onDrop = onPickFiles)
             }
 
-            transferState.state == TransferState.IDLE -> {
+            transferState.state == TransferState.IDLE && sendRoute != SendRoute.CLEX_LINK -> {
                 SectionLabel(text = "Files Loaded")
                 Spacer(Modifier.height(CxSpacing.lg))
-                TransferRouteSelector(
-                    selectedMethod = transferState.method,
-                    onSelect = controller::setMethod
+                SendRouteSelector(
+                    selectedRoute = sendRoute,
+                    onSelect = { sendRoute = it }
                 )
                 Spacer(Modifier.height(CxSpacing.lg))
                 files.forEach { file ->
@@ -360,7 +488,7 @@ private fun LiveSendTab(
 
                 Spacer(Modifier.height(CxSpacing.xl))
                 BrutalistButton(
-                    text = "START DIRECT TRANSFER →",
+                    text = if (sendRoute == SendRoute.LOCAL) "START LOCAL TRANSFER →" else "START DIRECT TRANSFER →",
                     onClick = { controller.startTransfer() },
                     variant = ButtonVariant.PRIMARY,
                     size = ButtonSize.LARGE,
@@ -378,6 +506,74 @@ private fun LiveSendTab(
                 BrutalistButton(
                     text = "CLEAR FILES",
                     onClick = { controller.clearFiles() },
+                    variant = ButtonVariant.GHOST,
+                    size = ButtonSize.MEDIUM,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // ── Clex Link: device picker flow ──
+            transferState.state == TransferState.IDLE && sendRoute == SendRoute.CLEX_LINK -> {
+                SectionLabel(text = "Clex Link")
+                Spacer(Modifier.height(CxSpacing.lg))
+                SendRouteSelector(
+                    selectedRoute = sendRoute,
+                    onSelect = { sendRoute = it }
+                )
+                Spacer(Modifier.height(CxSpacing.lg))
+
+                files.forEach { file ->
+                    RemovableFileRow(
+                        file = file,
+                        onRemove = { controller.removeFile(file.id) }
+                    )
+                    Spacer(Modifier.height(CxSpacing.sm))
+                }
+                Spacer(Modifier.height(CxSpacing.md))
+
+                ClexLinkDevicePicker(
+                    nearbyState = nearbyState,
+                    devices = nearbyDevices,
+                    onStartScan = onEnsureNearbyReady,
+                    onStopScan = { nearbySession.stopDiscovery() },
+                    onSelectDevice = { device ->
+                        nearbySession.sendInvite(
+                            device = device,
+                            fileCount = files.size,
+                            totalBytes = files.sumOf { it.size },
+                        )
+                    },
+                    onCancelInvite = { nearbySession.cancelInvite() },
+                )
+
+                Spacer(Modifier.height(CxSpacing.lg))
+                // Sharesheet add-on — separate from Clex Link
+                BrutalistButton(
+                    text = "⇧  SHARE TO ANDROID APPS",
+                    onClick = {
+                        uiScope.launch {
+                            SharesheetHelper.shareWorkspaceFiles(context, files)
+                        }
+                    },
+                    variant = ButtonVariant.SECONDARY,
+                    size = ButtonSize.MEDIUM,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(CxSpacing.sm))
+                BrutalistButton(
+                    text = "ADD MORE FILES",
+                    onClick = onPickFiles,
+                    variant = ButtonVariant.SECONDARY,
+                    size = ButtonSize.MEDIUM,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(CxSpacing.sm))
+                BrutalistButton(
+                    text = "CLEAR FILES",
+                    onClick = {
+                        nearbySession.stopDiscovery()
+                        controller.clearFiles()
+                    },
                     variant = ButtonVariant.GHOST,
                     size = ButtonSize.MEDIUM,
                     modifier = Modifier.fillMaxWidth()
@@ -422,9 +618,16 @@ private fun LiveSendTab(
                         "CODE" to transferState.roomCode,
                     ),
                     primaryLabel = "NEW TRANSFER",
-                    onPrimary = { controller.resetTransfer() },
-                    secondaryLabel = "ADD MORE FILES",
-                    onSecondary = onPickFiles
+                    onPrimary = {
+                        nearbySession.stopDiscovery()
+                        controller.resetTransfer()
+                    },
+                    secondaryLabel = "SHARE TO ANDROID APPS",
+                    onSecondary = {
+                        uiScope.launch {
+                            SharesheetHelper.shareWorkspaceFiles(context, files)
+                        }
+                    }
                 )
             }
 
@@ -432,7 +635,10 @@ private fun LiveSendTab(
                 WorkspaceErrorPanel(
                     message = transferState.error ?: "Transfer failed.",
                     onRetry = { controller.startTransfer() },
-                    onReset = { controller.resetTransfer() }
+                    onReset = {
+                        nearbySession.stopDiscovery()
+                        controller.resetTransfer()
+                    }
                 )
             }
         }
@@ -444,11 +650,26 @@ private fun LiveSendTab(
 @Composable
 private fun LiveReceiveTab(
     controller: WorkspaceReceiverController,
+    nearbySession: NearbySession,
 ) {
     val transferState by controller.transferState.collectAsState()
     val saveMessage by controller.saveMessage.collectAsState()
     var roomCodeInput by rememberSaveable { mutableStateOf("") }
     val scrollState = rememberScrollState()
+
+    // Clex Link inbound invite state
+    val nearbyState by nearbySession.sessionState.collectAsState()
+    val inboundInvite by nearbySession.inboundInvite.collectAsState()
+    val resolvedRoute by nearbySession.resolvedRoute.collectAsState()
+
+    // When receiver accepts and route resolves, connect to transfer
+    LaunchedEffect(resolvedRoute, nearbyState) {
+        if (nearbyState == NearbySessionState.RESOLVED) {
+            val route = resolvedRoute ?: return@LaunchedEffect
+            controller.setMethod(route.method)
+            controller.connect(route.roomCode)
+        }
+    }
 
     val qrScanLauncher = rememberLauncherForActivityResult(
         contract = com.journeyapps.barcodescanner.ScanContract()
@@ -461,6 +682,16 @@ private fun LiveReceiveTab(
         } else {
             roomCodeInput = normalizeRoomCodeInput(scannedContent)
         }
+    }
+
+    // ── Full-screen Clex Link invite prompt (overlays receive tab) ──
+    if (nearbyState == NearbySessionState.INVITE_RECEIVED && inboundInvite != null) {
+        ClexLinkInvitePrompt(
+            invite = inboundInvite!!,
+            onAccept = { nearbySession.acceptInvite() },
+            onDecline = { nearbySession.declineInvite() }
+        )
+        return
     }
 
     Column(
@@ -736,6 +967,503 @@ private fun TransferRouteSelector(
 
     if (showInfoDialog) {
         TransferModeInfoDialog(onDismiss = { showInfoDialog = false })
+    }
+}
+
+// ── SEND ROUTE SELECTOR (3-way: Direct | Local | Clex Link) ──
+
+@Composable
+private fun SendRouteSelector(
+    selectedRoute: SendRoute,
+    onSelect: (SendRoute) -> Unit,
+) {
+    val colors = CxTheme.colors
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(colors.bgSecondary)
+            ) {
+                listOf(
+                    SendRoute.DIRECT to "DIRECT",
+                    SendRoute.LOCAL to "LOCAL",
+                    SendRoute.CLEX_LINK to "CLEX LINK",
+                ).forEach { (route, label) ->
+                    val isActive = route == selectedRoute
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSelect(route) }
+                            .background(
+                                if (isActive) {
+                                    if (route == SendRoute.CLEX_LINK) colors.accentTertiary.copy(alpha = if (colors.isDark) 0.18f else 0.16f)
+                                    else colors.accent.copy(alpha = if (colors.isDark) 0.18f else 0.16f)
+                                } else colors.bgCard
+                            )
+                            .border(
+                                width = CxBorders.medium,
+                                color = if (isActive) {
+                                    if (route == SendRoute.CLEX_LINK) colors.accentTertiary.copy(alpha = 0.82f)
+                                    else colors.accent.copy(alpha = 0.82f)
+                                } else colors.borderColor
+                            )
+                            .padding(vertical = CxSpacing.md),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        MonoText(
+                            text = label,
+                            fontSize = CxTypography.textXs,
+                            fontWeight = CxTypography.weightBold,
+                            color = if (isActive) {
+                                if (route == SendRoute.CLEX_LINK) colors.accentTertiary else colors.accent
+                            } else colors.textTertiary,
+                            letterSpacing = CxTypography.textXs * 0.08
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.width(CxSpacing.sm))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .border(CxBorders.thin, colors.borderSubtle)
+                    .background(colors.bgCard)
+                    .clickable { showInfoDialog = true },
+                contentAlignment = Alignment.Center
+            ) {
+                MonoText(
+                    text = "i",
+                    fontSize = CxTypography.textBase,
+                    fontWeight = CxTypography.weightBold,
+                    color = colors.accent
+                )
+            }
+        }
+    }
+
+    if (showInfoDialog) {
+        SendRouteInfoDialog(onDismiss = { showInfoDialog = false })
+    }
+}
+
+@Composable
+private fun SendRouteInfoDialog(onDismiss: () -> Unit) {
+    val colors = CxTheme.colors
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(CxBorders.thick, colors.borderBold)
+                .background(colors.bgPrimary)
+                .padding(CxSpacing.cardPadding)
+        ) {
+            MonoText(
+                text = "SEND ROUTES",
+                fontSize = CxTypography.textLg,
+                fontWeight = CxTypography.weightBold,
+                color = colors.accent
+            )
+            Spacer(Modifier.height(CxSpacing.lg))
+
+            MonoText(
+                text = "⚡ DIRECT",
+                fontSize = CxTypography.textSm,
+                fontWeight = CxTypography.weightBold,
+                color = colors.textPrimary
+            )
+            Spacer(Modifier.height(CxSpacing.xs))
+            BodyText(
+                text = "Peer-to-peer transfer over the internet. Works anywhere — files are sent directly between devices using an encrypted WebRTC connection. No file size limits. No cloud storage.",
+                fontSize = CxTypography.textSm
+            )
+
+            Spacer(Modifier.height(CxSpacing.lg))
+
+            MonoText(
+                text = "\uD83C\uDFE0 LOCAL",
+                fontSize = CxTypography.textSm,
+                fontWeight = CxTypography.weightBold,
+                color = colors.textPrimary
+            )
+            Spacer(Modifier.height(CxSpacing.xs))
+            BodyText(
+                text = "Transfer over your local network (same Wi-Fi / office / home). Fastest possible speed. Data never leaves your network. Both devices must be on the same network.",
+                fontSize = CxTypography.textSm
+            )
+
+            Spacer(Modifier.height(CxSpacing.lg))
+
+            MonoText(
+                text = "◉ CLEX LINK",
+                fontSize = CxTypography.textSm,
+                fontWeight = CxTypography.weightBold,
+                color = colors.accentTertiary
+            )
+            Spacer(Modifier.height(CxSpacing.xs))
+            BodyText(
+                text = "Discover nearby Clex devices using Bluetooth. Tap to send — the receiver sees an accept prompt. Automatically picks the fastest route (Local if same Wi-Fi, Direct otherwise). Both devices need Clex installed.",
+                fontSize = CxTypography.textSm
+            )
+
+            Spacer(Modifier.height(CxSpacing.xl))
+
+            BrutalistButton(
+                text = "GOT IT",
+                onClick = onDismiss,
+                variant = ButtonVariant.PRIMARY,
+                size = ButtonSize.MEDIUM,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+// ── CLEX LINK: DEVICE PICKER ────────────────────
+
+@Composable
+private fun ClexLinkDevicePicker(
+    nearbyState: NearbySessionState,
+    devices: List<NearbyDevice>,
+    onStartScan: () -> Unit,
+    onStopScan: () -> Unit,
+    onSelectDevice: (NearbyDevice) -> Unit,
+    onCancelInvite: () -> Unit,
+) {
+    val colors = CxTheme.colors
+    val infiniteTransition = rememberInfiniteTransition(label = "scanPulse")
+    val scanAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scanAlpha"
+    )
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        when (nearbyState) {
+            NearbySessionState.IDLE,
+            NearbySessionState.CANCELLED,
+            NearbySessionState.UNAVAILABLE -> {
+                MicroAppPanel(title = "Clex Link") {
+                    if (nearbyState == NearbySessionState.UNAVAILABLE) {
+                        MonoText(
+                            text = "BLUETOOTH NOT AVAILABLE",
+                            fontSize = CxTypography.textSm,
+                            color = CxColors.error
+                        )
+                        Spacer(Modifier.height(CxSpacing.sm))
+                        BodyText(
+                            text = "Enable Bluetooth and grant permissions to discover nearby Clex devices.",
+                            fontSize = CxTypography.textSm
+                        )
+                    } else {
+                        BodyText(
+                            text = "Scan for nearby Clex devices using Bluetooth. Both devices need Clex installed.",
+                            fontSize = CxTypography.textSm
+                        )
+                    }
+                    Spacer(Modifier.height(CxSpacing.lg))
+                    BrutalistButton(
+                        text = "SCAN FOR DEVICES",
+                        onClick = onStartScan,
+                        variant = ButtonVariant.PRIMARY,
+                        size = ButtonSize.LARGE,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            NearbySessionState.SCANNING,
+            NearbySessionState.ADVERTISING,
+            NearbySessionState.DISCOVERING -> {
+                // Scanning status
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        MonoText(
+                            text = "◉",
+                            fontSize = CxTypography.textBase,
+                            color = colors.accentTertiary.copy(alpha = scanAlpha)
+                        )
+                        Spacer(Modifier.width(CxSpacing.sm))
+                        MonoText(
+                            text = "SCANNING NEARBY",
+                            fontSize = CxTypography.textSm,
+                            fontWeight = CxTypography.weightBold,
+                            color = colors.accentTertiary
+                        )
+                    }
+                    MonoText(
+                        text = "STOP",
+                        fontSize = CxTypography.textXs,
+                        color = colors.textTertiary,
+                        modifier = Modifier.clickable { onStopScan() }
+                    )
+                }
+                Spacer(Modifier.height(CxSpacing.md))
+
+                if (devices.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, colors.borderSubtle)
+                            .background(colors.bgCard)
+                            .padding(CxSpacing.xl),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        MonoText(
+                            text = "◌",
+                            fontSize = CxTypography.text3xl,
+                            color = colors.textTertiary.copy(alpha = scanAlpha)
+                        )
+                        Spacer(Modifier.height(CxSpacing.md))
+                        BodyText(
+                            text = "Looking for nearby Clex devices…",
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    MonoText(
+                        text = "${devices.size} DEVICE${if (devices.size != 1) "S" else ""} FOUND",
+                        fontSize = CxTypography.textXs,
+                        color = colors.textTertiary
+                    )
+                    Spacer(Modifier.height(CxSpacing.sm))
+                    devices.forEach { device ->
+                        NearbyDeviceRow(
+                            device = device,
+                            onClick = { onSelectDevice(device) }
+                        )
+                        Spacer(Modifier.height(CxSpacing.sm))
+                    }
+                }
+            }
+
+            NearbySessionState.INVITE_PENDING -> {
+                MicroAppPanel(title = "Invite Sent") {
+                    MonoText(
+                        text = "WAITING FOR ACCEPT",
+                        fontSize = CxTypography.textSm,
+                        fontWeight = CxTypography.weightBold,
+                        color = colors.accent
+                    )
+                    Spacer(Modifier.height(CxSpacing.sm))
+                    BodyText(text = "The receiver will see a prompt to accept or decline.")
+                    Spacer(Modifier.height(CxSpacing.lg))
+                    BrutalistButton(
+                        text = "CANCEL INVITE",
+                        onClick = onCancelInvite,
+                        variant = ButtonVariant.GHOST,
+                        size = ButtonSize.MEDIUM,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            NearbySessionState.NEGOTIATING -> {
+                ConnectingPanel(
+                    title = "NEGOTIATING ROUTE",
+                    subtitle = "Checking if both devices share a Wi-Fi network for fastest transfer, otherwise falling back to Direct."
+                )
+            }
+
+            NearbySessionState.RESOLVED -> {
+                ConnectingPanel(
+                    title = "ROUTE RESOLVED",
+                    subtitle = "Handing off to transfer layer…"
+                )
+            }
+
+            NearbySessionState.INVITE_RECEIVED -> {
+                // This state is handled by the full-screen prompt overlay in LiveReceiveTab
+            }
+        }
+    }
+}
+
+@Composable
+private fun NearbyDeviceRow(
+    device: NearbyDevice,
+    onClick: () -> Unit,
+) {
+    val colors = CxTheme.colors
+    val signalStrength = when {
+        device.rssi >= -50 -> "●●●"
+        device.rssi >= -70 -> "●●○"
+        else -> "●○○"
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, colors.accentTertiary.copy(alpha = 0.32f))
+            .background(colors.bgCard)
+            .clickable { onClick() }
+            .padding(horizontal = CxSpacing.md, vertical = CxSpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(CxSpacing.md)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(colors.accentTertiary.copy(alpha = 0.14f))
+                .border(1.dp, colors.accentTertiary.copy(alpha = 0.42f)),
+            contentAlignment = Alignment.Center
+        ) {
+            MonoText(
+                text = "◉",
+                fontSize = CxTypography.textBase,
+                color = colors.accentTertiary
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            MonoText(
+                text = device.displayName,
+                fontSize = CxTypography.textSm,
+                fontWeight = CxTypography.weightBold,
+                color = colors.textPrimary,
+                maxLines = 1
+            )
+            MonoText(
+                text = signalStrength,
+                fontSize = CxTypography.textXs,
+                color = colors.textTertiary
+            )
+        }
+        MonoText(
+            text = "SEND →",
+            fontSize = CxTypography.textXs,
+            fontWeight = CxTypography.weightBold,
+            color = colors.accentTertiary
+        )
+    }
+}
+
+// ── CLEX LINK: RECEIVER ACCEPT/DECLINE PROMPT ───
+
+@Composable
+private fun ClexLinkInvitePrompt(
+    invite: NearbyInvite,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+) {
+    val colors = CxTheme.colors
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.bgPrimary),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CxSpacing.screenHorizontal)
+                .padding(vertical = CxSpacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            MonoText(
+                text = "◉",
+                fontSize = CxTypography.text6xl,
+                color = colors.accentTertiary
+            )
+            Spacer(Modifier.height(CxSpacing.xl))
+            MonoText(
+                text = "INCOMING CLEX LINK",
+                fontSize = CxTypography.textXl,
+                fontWeight = CxTypography.weightBold,
+                color = colors.accentTertiary,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(CxSpacing.xl))
+
+            // Sender info card
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(CxBorders.thick, colors.accentTertiary.copy(alpha = 0.62f))
+                    .background(colors.bgCard)
+                    .padding(CxSpacing.cardPadding)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    MonoText(text = "FROM", fontSize = CxTypography.textXs, color = colors.textTertiary)
+                    MonoText(
+                        text = invite.fromDisplayName,
+                        fontSize = CxTypography.textSm,
+                        fontWeight = CxTypography.weightBold,
+                        color = colors.textPrimary
+                    )
+                }
+                Spacer(Modifier.height(CxSpacing.md))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    MonoText(text = "FILES", fontSize = CxTypography.textXs, color = colors.textTertiary)
+                    MonoText(
+                        text = "${invite.fileCount} file${if (invite.fileCount != 1) "s" else ""}",
+                        fontSize = CxTypography.textSm,
+                        color = colors.textPrimary
+                    )
+                }
+                Spacer(Modifier.height(CxSpacing.md))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    MonoText(text = "SIZE", fontSize = CxTypography.textXs, color = colors.textTertiary)
+                    MonoText(
+                        text = formatBytes(invite.totalBytes),
+                        fontSize = CxTypography.textSm,
+                        color = colors.textPrimary
+                    )
+                }
+                Spacer(Modifier.height(CxSpacing.md))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    MonoText(text = "ROUTE", fontSize = CxTypography.textXs, color = colors.textTertiary)
+                    BrutalistBadge(
+                        text = "CLEX LINK",
+                        accentColor = colors.accentTertiary,
+                        filled = true
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(CxSpacing.xxl))
+
+            BrutalistButton(
+                text = "ACCEPT",
+                onClick = onAccept,
+                variant = ButtonVariant.PRIMARY,
+                size = ButtonSize.LARGE,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(CxSpacing.md))
+            BrutalistButton(
+                text = "DECLINE",
+                onClick = onDecline,
+                variant = ButtonVariant.GHOST,
+                size = ButtonSize.LARGE,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 

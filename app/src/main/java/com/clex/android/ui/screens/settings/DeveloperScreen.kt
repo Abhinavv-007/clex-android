@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -175,7 +175,7 @@ fun DeveloperScreen(onBack: () -> Unit) {
                         )
                         Spacer(Modifier.height(CxSpacing.xs))
                         BodyText(
-                            text = "Glass-shell refinement, brighter light-mode accents, and release metadata alignment for the 1.9.2 pass.",
+                            text = "Clex Link nearby handoff, Android Sharesheet interop, and verified release alignment for the 1.9.3 Android pass.",
                             textAlign = TextAlign.Start
                         )
                     }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Clex transfer temp files -->
+    <cache-path name="clex_transfer" path="clex-transfer/" />
+    <!-- Clex tool output files -->
+    <cache-path name="clex_tools" path="clex-tools/" />
+    <!-- General external files -->
+    <external-files-path name="clex_downloads" path="Download/" />
+</paths>

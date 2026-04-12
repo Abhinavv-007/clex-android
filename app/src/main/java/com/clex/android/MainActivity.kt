@@ -19,6 +19,7 @@ import com.clex.android.data.ClexDriveApi
 import com.clex.android.data.DriveAuthStore
 import com.clex.android.data.PendingReceiveLink
 import com.clex.android.data.PendingSecretLink
+import com.clex.android.data.transfer.SharesheetHelper
 import com.clex.android.data.transfer.TransferMethod
 import com.clex.android.navigation.*
 import com.clex.android.ui.theme.ClexTheme
@@ -68,6 +69,12 @@ class MainActivity : ComponentActivity() {
     private fun handleIncomingIntent(intent: Intent?) {
         val targetIntent = intent ?: return
         if (targetIntent.getBooleanExtra(DRIVE_INTENT_HANDLED_KEY, false)) return
+
+        // Handle inbound share from external apps (ACTION_SEND / ACTION_SEND_MULTIPLE)
+        if (targetIntent.action == Intent.ACTION_SEND || targetIntent.action == Intent.ACTION_SEND_MULTIPLE) {
+            handleInboundShareIntent(targetIntent)
+            return
+        }
 
         val data = targetIntent.data ?: return
         if (data.host != "clex.in") return
@@ -126,6 +133,16 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private fun handleInboundShareIntent(targetIntent: Intent) {
+        if (targetIntent.getBooleanExtra(DRIVE_INTENT_HANDLED_KEY, false)) return
+        val share = SharesheetHelper.extractInboundShare(targetIntent) ?: return
+        targetIntent.putExtra(DRIVE_INTENT_HANDLED_KEY, true)
+
+        if (share.uris.isNotEmpty()) {
+            AppLinkStore.queueInboundShare(share.uris)
+        }
+    }
+
     private fun handleSecretLinkIntent(targetIntent: Intent, data: android.net.Uri) {
         val secretId = data.getQueryParameter("id")
             ?: data.pathSegments.takeIf { it.size >= 3 && it[0] == "vault" && it[1] == "secret" }?.get(2)
@@ -167,6 +184,7 @@ fun ClexApp() {
     val currentRoute = navBackStackEntry?.destination?.route
     val pendingSecretLink by AppLinkStore.pendingSecretLink.collectAsState()
     val pendingReceiveLink by AppLinkStore.pendingReceiveLink.collectAsState()
+    val pendingInboundShare by AppLinkStore.pendingInboundShare.collectAsState()
 
     // System bars — react to theme changes
     val systemUiController = rememberSystemUiController()
@@ -197,6 +215,15 @@ fun ClexApp() {
 
     LaunchedEffect(pendingReceiveLink) {
         if (pendingReceiveLink != null && currentRoute != Screen.Workspace.route) {
+            navController.navigate(Screen.Workspace.route) {
+                launchSingleTop = true
+            }
+        }
+    }
+
+    // Navigate to Workspace send tab when files shared from external apps
+    LaunchedEffect(pendingInboundShare) {
+        if (pendingInboundShare != null && currentRoute != Screen.Workspace.route) {
             navController.navigate(Screen.Workspace.route) {
                 launchSingleTop = true
             }

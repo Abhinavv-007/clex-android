@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.2"
-    const val versionCode = 192
+    const val versionName = "1.9.3"
+    const val versionCode = 193
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.3",
+            releasedOn = "12 Apr 2026",
+            notes = listOf(
+                "Converted Clex Link from a simulated nearby state flow into a real BLE GATT invite / accept handoff that resolves into Local or Direct transfer routes.",
+                "Fixed Android share-in and share-out plumbing so external apps can send files into Clex and workspace files can be exported through the Android chooser as an additive path.",
+                "Corrected room-code handoff, BLE readiness handling, and receiver-side Clex Link startup without disturbing existing Direct, Local, QR, or code flows."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.2",
             releasedOn = "12 Apr 2026",
