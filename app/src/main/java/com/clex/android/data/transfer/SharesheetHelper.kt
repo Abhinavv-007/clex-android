@@ -88,26 +88,34 @@ object SharesheetHelper {
         context.startActivity(Intent.createChooser(intent, "Share via"))
     }
 
-    suspend fun shareWorkspaceFiles(context: Context, files: List<WorkspaceSelectedFile>) {
-        if (files.isEmpty()) return
-
-        val stagedFiles = withContext(Dispatchers.IO) {
-            val shareDir = File(context.cacheDir, "clex-shares").apply { mkdirs() }
-            files.mapIndexedNotNull { index, file ->
-                runCatching {
-                    val safeName = file.name.ifBlank { "clex-file-$index" }.replace(Regex("[^A-Za-z0-9._-]"), "_")
-                    val stagedFile = File(shareDir, "${System.currentTimeMillis()}_${index}_$safeName")
-                    context.contentResolver.openInputStream(file.uri)?.use { input ->
-                        stagedFile.outputStream().use { output -> input.copyTo(output) }
-                    } ?: return@runCatching null
-                    stagedFile
-                }.getOrNull()
-            }
+    suspend fun shareWorkspaceFiles(context: Context, files: List<WorkspaceSelectedFile>): Result<Unit> {
+        if (files.isEmpty()) {
+            return Result.failure(IllegalArgumentException("Add at least one file before sharing to Android apps."))
         }
 
-        if (stagedFiles.isEmpty()) return
-        val commonMimeType = files.map { it.mimeType }.distinct().singleOrNull() ?: "*/*"
-        shareMultipleFiles(context, stagedFiles, commonMimeType)
+        return runCatching {
+            val stagedFiles = withContext(Dispatchers.IO) {
+                val shareDir = File(context.cacheDir, "clex-shares").apply { mkdirs() }
+                files.mapIndexedNotNull { index, file ->
+                    runCatching {
+                        val safeName = file.name.ifBlank { "clex-file-$index" }.replace(Regex("[^A-Za-z0-9._-]"), "_")
+                        val stagedFile = File(shareDir, "${System.currentTimeMillis()}_${index}_$safeName")
+                        val inputStream = context.contentResolver.openInputStream(file.uri)
+                            ?: return@mapIndexedNotNull null
+                        inputStream.use { input ->
+                            stagedFile.outputStream().use { output -> input.copyTo(output) }
+                        }
+                        stagedFile
+                    }.getOrNull()
+                }
+            }
+
+            require(stagedFiles.isNotEmpty()) {
+                "These files could not be prepared for Android sharing on this device."
+            }
+            val commonMimeType = files.map { it.mimeType }.distinct().singleOrNull() ?: "*/*"
+            shareMultipleFiles(context, stagedFiles, commonMimeType)
+        }
     }
 
     // ── Inbound: extract files/text from incoming share intent ──

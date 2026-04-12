@@ -4,6 +4,8 @@
     <cache-path name="clex_transfer" path="clex-transfer/" />
     <!-- Clex tool output files -->
     <cache-path name="clex_tools" path="clex-tools/" />
+    <!-- Clex Sharesheet staged export files -->
+    <cache-path name="clex_shares" path="clex-shares/" />
     <!-- General external files -->
     <external-files-path name="clex_downloads" path="Download/" />
 </paths>

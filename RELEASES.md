@@ -21,15 +21,15 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
-## v1.9.3
+## v1.9.4
 
 Public artifact names:
 
-- `Clex-1.9.3-universal.apk`
-- `Clex-1.9.3.aab`
+- `Clex-1.9.4-universal.apk`
+- `Clex-1.9.4.aab`
 
 Release notes:
 
-- Added real Clex Link nearby handoff over BLE GATT, then resolved accepted sessions into Local or Direct transfer routes.
-- Fixed Android Sharesheet add-on behavior so files can be shared out to Android apps and shared into Clex without disrupting existing flows.
-- Includes corrected room-code handoff, receiver-side Clex Link readiness, and aligned Android release metadata for v1.9.3.
+- Fixed the Share to Android Apps crash by exposing the staged `clex-shares` cache path through FileProvider.
+- Added safer chooser error handling so Android app sharing failures no longer crash the app.
+- Kept Quick Share and other Android app sharing as an additive export path without changing Direct, Local, or Clex Link flows.

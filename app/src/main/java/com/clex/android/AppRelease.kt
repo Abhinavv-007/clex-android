@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.3"
-    const val versionCode = 193
+    const val versionName = "1.9.4"
+    const val versionCode = 194
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.4",
+            releasedOn = "12 Apr 2026",
+            notes = listOf(
+                "Fixed the Share to Android Apps crash by exposing the staged clex-shares cache path through FileProvider.",
+                "Added guarded chooser error handling so Android sharing failures surface as a message instead of killing the app.",
+                "Kept the Quick Share / Android app share path as an additive export flow without changing Direct, Local, or Clex Link behavior."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.3",
             releasedOn = "12 Apr 2026",

@@ -553,6 +553,13 @@ private fun LiveSendTab(
                     onClick = {
                         uiScope.launch {
                             SharesheetHelper.shareWorkspaceFiles(context, files)
+                                .onFailure { error ->
+                                    Toast.makeText(
+                                        context,
+                                        error.message ?: "Couldn't open Android sharing on this device.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                         }
                     },
                     variant = ButtonVariant.SECONDARY,
@@ -626,6 +633,13 @@ private fun LiveSendTab(
                     onSecondary = {
                         uiScope.launch {
                             SharesheetHelper.shareWorkspaceFiles(context, files)
+                                .onFailure { error ->
+                                    Toast.makeText(
+                                        context,
+                                        error.message ?: "Couldn't open Android sharing on this device.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                         }
                     }
                 )
