@@ -77,6 +77,17 @@ private const val MIN_USABLE_ATT_MTU = 64
 
 private const val CLEX_PREFS = "clex_prefs"
 private const val DEVICE_NAME_KEY = "clex_device_name"
+private const val INSTANCE_ID_KEY = "clex_instance_id"
+
+/**
+ * Unassigned-but-stable manufacturer ID used to embed a per-install
+ * Clex instance identifier in advertise packets. Receivers use it to
+ * suppress self-discovery (the OS reports `02:00:00:00:00:00` for the
+ * local Bluetooth MAC since Android 6, so MAC-based self-filtering
+ * never works).
+ */
+private const val CLEX_MANUFACTURER_ID = 0xCE48
+private const val INSTANCE_ID_BYTES = 4
 
 private const val RESPONSE_STATUS_ACCEPTED = "accepted"
 private const val RESPONSE_STATUS_DECLINED = "declined"
@@ -109,14 +120,31 @@ class NearbySession(private val context: Context) {
     private val bleAdvertiser: BluetoothLeAdvertiser? get() = bluetoothAdapter?.bluetoothLeAdvertiser
 
     private var gattServer: BluetoothGattServer? = null
+    private var serviceAdded = false
+    private var advertisePending = false
     private var activeGatt: BluetoothGatt? = null
     private var outboundInvite: NearbyInvite? = null
     private var inboundInviteDevice: BluetoothDevice? = null
     private var responseSubscriberAddress: String? = null
     private var inviteDescriptorReady = false
     private var mtuNegotiated = false
+    private val localInstanceId: ByteArray by lazy { ensureInstanceId() }
 
     fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
+
+    /**
+     * Whether this device can advertise as a BLE peripheral. Many mid-range
+     * Android phones report `bluetoothLeAdvertiser == null` or
+     * `isMultipleAdvertisementSupported() == false`, which makes them
+     * invisible to peers — they can still scan for and invite phones that
+     * do advertise.
+     */
+    fun peripheralSupported(): Boolean {
+        val adapter = bluetoothAdapter ?: return false
+        if (!adapter.isEnabled) return false
+        if (adapter.bluetoothLeAdvertiser == null) return false
+        return runCatching { adapter.isMultipleAdvertisementSupported }.getOrDefault(false)
+    }
 
     fun missingBlePermissions(): List<String> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -153,10 +181,19 @@ class NearbySession(private val context: Context) {
         responseSubscriberAddress = null
         inviteDescriptorReady = false
 
-        startGattServer()
+        val canAdvertise = peripheralSupported()
+        if (canAdvertise) {
+            // Open the GATT server first; advertise is deferred until
+            // onServiceAdded fires so peers don't connect before the
+            // service is actually queryable.
+            startGattServer()
+        }
         startScan()
-        startAdvertise()
-        _sessionState.value = NearbySessionState.DISCOVERING
+        _sessionState.value = if (canAdvertise) {
+            NearbySessionState.DISCOVERING
+        } else {
+            NearbySessionState.SCAN_ONLY
+        }
         startStaleCleanup()
     }
 
@@ -323,7 +360,9 @@ class NearbySession(private val context: Context) {
         val adapter = bluetoothAdapter ?: return false
         if (!adapter.isEnabled) return false
         if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) return false
-        if (bleScanner == null || bleAdvertiser == null) return false
+        // Scanning is required; advertising is optional and surfaced via
+        // peripheralSupported() / NearbySessionState.SCAN_ONLY.
+        if (bleScanner == null) return false
         return hasBlePermissions()
     }
 
@@ -360,6 +399,7 @@ class NearbySession(private val context: Context) {
         val data = AdvertiseData.Builder()
             .addServiceUuid(CLEX_SERVICE_PARCEL_UUID)
             .addServiceData(CLEX_SERVICE_PARCEL_UUID, nameBytes)
+            .addManufacturerData(CLEX_MANUFACTURER_ID, localInstanceId)
             .setIncludeDeviceName(false)
             .build()
         advertiser.startAdvertising(settings, data, advertiseCallback)
@@ -367,6 +407,7 @@ class NearbySession(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     private fun stopAdvertise() {
+        advertisePending = false
         runCatching { bleAdvertiser?.stopAdvertising(advertiseCallback) }
     }
 
@@ -375,15 +416,43 @@ class NearbySession(private val context: Context) {
         if (gattServer != null) return
         val manager = bluetoothManager ?: return
         val server = manager.openGattServer(context, gattServerCallback) ?: return
-        server.addService(buildGattService())
         gattServer = server
+        serviceAdded = false
+        advertisePending = true
+        // addService is async — onServiceAdded fires startAdvertise so peers
+        // can't discover & connect before the service is queryable.
+        if (!server.addService(buildGattService())) {
+            // queueing failed; fall back to the legacy ordering so we still
+            // attempt to advertise.
+            advertisePending = false
+            startAdvertise()
+        }
     }
 
     private fun stopGattServer() {
+        serviceAdded = false
+        advertisePending = false
         runCatching { gattServer?.close() }
         gattServer = null
         inboundInviteDevice = null
         responseSubscriberAddress = null
+    }
+
+    private fun ensureInstanceId(): ByteArray {
+        val prefs = context.getSharedPreferences(CLEX_PREFS, Context.MODE_PRIVATE)
+        val stored = prefs.getString(INSTANCE_ID_KEY, null)
+        if (stored != null && stored.length == INSTANCE_ID_BYTES * 2) {
+            val parsed = ByteArray(INSTANCE_ID_BYTES)
+            for (i in 0 until INSTANCE_ID_BYTES) {
+                parsed[i] = stored.substring(i * 2, i * 2 + 2).toInt(16).toByte()
+            }
+            return parsed
+        }
+        val fresh = ByteArray(INSTANCE_ID_BYTES)
+        java.security.SecureRandom().nextBytes(fresh)
+        val hex = fresh.joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        prefs.edit().putString(INSTANCE_ID_KEY, hex).apply()
+        return fresh
     }
 
     @SuppressLint("MissingPermission")
@@ -523,8 +592,15 @@ class NearbySession(private val context: Context) {
     private val scanCallback = object : ScanCallback() {
         @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val localAddress = runCatching { bluetoothAdapter?.address }.getOrNull()
-            if (result.device.address == localAddress) return
+            // Self-filter: bluetoothAdapter.address returns 02:00:00:00:00:00
+            // on Android 6+, so MAC-based comparison never works. We compare
+            // against the per-install instance id we publish in manufacturer
+            // data instead.
+            val advertisedInstanceId = result.scanRecord
+                ?.getManufacturerSpecificData(CLEX_MANUFACTURER_ID)
+            if (advertisedInstanceId != null && advertisedInstanceId.contentEquals(localInstanceId)) {
+                return
+            }
 
             val serviceData = result.scanRecord?.getServiceData(CLEX_SERVICE_PARCEL_UUID)
             val name = if (serviceData != null && serviceData.isNotEmpty()) {
@@ -561,11 +637,14 @@ class NearbySession(private val context: Context) {
     // ── Advertise Callback ──────────────────────────
 
     private val advertiseCallback = object : AdvertiseCallback() {
-        override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) = Unit
+        override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+            advertisePending = false
+        }
 
         override fun onStartFailure(errorCode: Int) {
+            advertisePending = false
             if (_sessionState.value == NearbySessionState.DISCOVERING) {
-                _sessionState.value = NearbySessionState.SCANNING
+                _sessionState.value = NearbySessionState.SCAN_ONLY
             }
         }
     }
@@ -669,6 +748,16 @@ class NearbySession(private val context: Context) {
     // ── GATT Server / Receiver Side ─────────────────
 
     private val gattServerCallback = object : BluetoothGattServerCallback() {
+        @SuppressLint("MissingPermission")
+        override fun onServiceAdded(status: Int, service: BluetoothGattService) {
+            if (service.uuid != CLEX_SERVICE_UUID) return
+            serviceAdded = status == BluetoothGatt.GATT_SUCCESS
+            // Only now is the service queryable; safe to start advertising.
+            if (serviceAdded && advertisePending) {
+                startAdvertise()
+            }
+        }
+
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_DISCONNECTED && inboundInviteDevice?.address == device.address) {
