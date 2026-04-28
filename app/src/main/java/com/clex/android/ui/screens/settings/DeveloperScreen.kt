@@ -175,7 +175,7 @@ fun DeveloperScreen(onBack: () -> Unit) {
                         )
                         Spacer(Modifier.height(CxSpacing.xs))
                         BodyText(
-                            text = "Nearby discovery hardening, chain receiver-ID propagation, and richer live-ledger detail for the 1.9.5 Android release.",
+                            text = "Clex Link invite and accept replies survive the round-trip — the GATT link now negotiates a larger ATT MTU before service discovery, so tap-a-device → invite → accept → transfer hand-off works end-to-end on the 1.9.6 Android release.",
                             textAlign = TextAlign.Start
                         )
                     }
