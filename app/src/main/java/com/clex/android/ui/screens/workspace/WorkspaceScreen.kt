@@ -102,6 +102,7 @@ fun WorkspaceScreen() {
     }
     val pendingInboundShare by AppLinkStore.pendingInboundShare.collectAsState()
     val nearbyState by nearbySession.sessionState.collectAsState()
+    val inboundInvite by nearbySession.inboundInvite.collectAsState()
     var pendingNearbyStart by remember { mutableStateOf(false) }
     var receiveAutoStartAttempted by rememberSaveable { mutableStateOf(false) }
     val bluetoothEnableLauncher = rememberLauncherForActivityResult(
@@ -113,6 +114,9 @@ fun WorkspaceScreen() {
             }
         } else {
             nearbySession.stopDiscovery()
+            // Clear sticky retry flags so the next user gesture re-prompts
+            // for permission / Bluetooth instead of silently doing nothing.
+            receiveAutoStartAttempted = false
         }
         pendingNearbyStart = false
     }
@@ -123,6 +127,7 @@ fun WorkspaceScreen() {
         if (!granted) {
             nearbySession.stopDiscovery()
             pendingNearbyStart = false
+            receiveAutoStartAttempted = false
             return@rememberLauncherForActivityResult
         }
 
@@ -247,6 +252,23 @@ fun WorkspaceScreen() {
                     }
                 }
             }
+        }
+
+        // Global Clex Link invite overlay — sits above the tab content so an
+        // inbound invite always interrupts the foreground regardless of which
+        // tab is selected.
+        val currentInvite = inboundInvite
+        if (nearbyState == NearbySessionState.INVITE_RECEIVED && currentInvite != null) {
+            ClexLinkInvitePrompt(
+                invite = currentInvite,
+                onAccept = {
+                    if (currentTab != WorkspaceTab.RECEIVE) {
+                        currentTab = WorkspaceTab.RECEIVE
+                    }
+                    nearbySession.acceptInvite()
+                },
+                onDecline = { nearbySession.declineInvite() }
+            )
         }
     }
 }
@@ -692,9 +714,10 @@ private fun LiveReceiveTab(
     var roomCodeInput by rememberSaveable { mutableStateOf("") }
     val scrollState = rememberScrollState()
 
-    // Clex Link inbound invite state
+    // Clex Link inbound invite state — the invite prompt itself is rendered
+    // as a global overlay in WorkspaceScreen; this tab only watches for the
+    // resolved route so it can connect to the negotiated transfer.
     val nearbyState by nearbySession.sessionState.collectAsState()
-    val inboundInvite by nearbySession.inboundInvite.collectAsState()
     val resolvedRoute by nearbySession.resolvedRoute.collectAsState()
 
     // When receiver accepts and route resolves, connect to transfer
@@ -719,15 +742,9 @@ private fun LiveReceiveTab(
         }
     }
 
-    // ── Full-screen Clex Link invite prompt (overlays receive tab) ──
-    if (nearbyState == NearbySessionState.INVITE_RECEIVED && inboundInvite != null) {
-        ClexLinkInvitePrompt(
-            invite = inboundInvite!!,
-            onAccept = { nearbySession.acceptInvite() },
-            onDecline = { nearbySession.declineInvite() }
-        )
-        return
-    }
+    // The invite prompt is rendered as a top-level overlay in
+    // WorkspaceScreen so it appears regardless of which tab the user is on
+    // when an invite arrives.
 
     Column(
         modifier = Modifier
@@ -1218,7 +1235,8 @@ private fun ClexLinkDevicePicker(
 
             NearbySessionState.SCANNING,
             NearbySessionState.ADVERTISING,
-            NearbySessionState.DISCOVERING -> {
+            NearbySessionState.DISCOVERING,
+            NearbySessionState.SCAN_ONLY -> {
                 // Scanning status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1247,6 +1265,28 @@ private fun ClexLinkDevicePicker(
                     )
                 }
                 Spacer(Modifier.height(CxSpacing.md))
+
+                if (nearbyState == NearbySessionState.SCAN_ONLY) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, colors.borderSubtle)
+                            .background(colors.bgCard)
+                            .padding(CxSpacing.md)
+                    ) {
+                        MonoText(
+                            text = "INVISIBLE TO OTHER PHONES",
+                            fontSize = CxTypography.textXs,
+                            fontWeight = CxTypography.weightBold,
+                            color = colors.accent
+                        )
+                        Spacer(Modifier.height(CxSpacing.xs))
+                        BodyText(
+                            text = "This phone's Bluetooth chip can't broadcast as a Clex Link peer, so it won't show up in other phones' lists. You can still tap a device below to invite it."
+                        )
+                    }
+                    Spacer(Modifier.height(CxSpacing.md))
+                }
 
                 if (devices.isEmpty()) {
                     Column(

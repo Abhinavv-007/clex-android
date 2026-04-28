@@ -41,6 +41,12 @@ enum class NearbySessionState {
     ADVERTISING,
     /** Both scanning and advertising simultaneously. */
     DISCOVERING,
+    /**
+     * Scanning is active but BLE peripheral / advertise is unsupported on
+     * this device, so it can still see other Clex phones and initiate
+     * invites against them, but is invisible to peers.
+     */
+    SCAN_ONLY,
     /** Invite sent, waiting for accept/decline. */
     INVITE_PENDING,
     /** Invite received from another device. */
