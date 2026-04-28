@@ -17,7 +17,7 @@ object AppRelease {
             notes = listOf(
                 "Fixed Clex Link invites and accept replies being silently dropped on every nearby connection. The BLE GATT link now negotiates a larger ATT MTU before service discovery so the invite and accept payloads travel intact instead of being truncated to ~20 bytes by the default 23-byte MTU.",
                 "End-to-end nearby hand-off (tap a device → invite arrives on the other phone → accept → transfer) now works on devices that support BLE peripheral mode.",
-                "Added a clearer Clex Link path so cancel, decline, and timeout cleanly return to the discovering state without leaving stale GATT connections."
+                "Refreshed the launcher icon at every density (mdpi through xxxhdpi, square and round) and the adaptive-icon foreground so the icon body fills more of the launcher tile and stays inside the safe zone on circle, squircle, and tear-drop masks across OEM launchers."
             )
         ),
         ChangelogEntry(
