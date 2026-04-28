@@ -21,6 +21,17 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.6
+
+Public artifact names:
+
+- `Clex-1.9.6-universal.apk`
+- `Clex-1.9.6.aab`
+
+Release notes:
+
+- Fixed Clex Link invites and accept replies being silently dropped on every connection. The GATT link now negotiates a larger ATT MTU before service discovery, so the invite and accept JSON travel in a single ATT PDU instead of being truncated to ~20 bytes by the default 23-byte MTU. Tap-a-device → invite arrives → accept → transfer hand-off now works end-to-end on devices that support BLE peripheral mode.
+
 ## v1.9.5
 
 Public artifact names:

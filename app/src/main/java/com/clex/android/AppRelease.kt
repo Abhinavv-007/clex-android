@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.5"
-    const val versionCode = 195
+    const val versionName = "1.9.6"
+    const val versionCode = 196
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.6",
+            releasedOn = "28 Apr 2026",
+            notes = listOf(
+                "Fixed Clex Link invites and accept replies being silently dropped on every nearby connection. The BLE GATT link now negotiates a larger ATT MTU before service discovery so the invite and accept payloads travel intact instead of being truncated to ~20 bytes by the default 23-byte MTU.",
+                "End-to-end nearby hand-off (tap a device → invite arrives on the other phone → accept → transfer) now works on devices that support BLE peripheral mode.",
+                "Added a clearer Clex Link path so cancel, decline, and timeout cleanly return to the discovering state without leaving stale GATT connections."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.5",
             releasedOn = "12 Apr 2026",

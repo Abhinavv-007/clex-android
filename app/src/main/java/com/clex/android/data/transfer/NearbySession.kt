@@ -69,6 +69,12 @@ private const val STALE_DEVICE_TIMEOUT_MS = 15_000L
 private const val INVITE_TIMEOUT_MS = 30_000L
 private const val SCAN_CLEANUP_INTERVAL_MS = 5_000L
 
+// ATT default MTU is 23 bytes (-> 20-byte useful payload), which truncates the
+// invite/response JSON. We negotiate a larger MTU before service discovery so
+// a single write/notification carries the full payload.
+private const val REQUESTED_ATT_MTU = 247
+private const val MIN_USABLE_ATT_MTU = 64
+
 private const val CLEX_PREFS = "clex_prefs"
 private const val DEVICE_NAME_KEY = "clex_device_name"
 
@@ -108,6 +114,7 @@ class NearbySession(private val context: Context) {
     private var inboundInviteDevice: BluetoothDevice? = null
     private var responseSubscriberAddress: String? = null
     private var inviteDescriptorReady = false
+    private var mtuNegotiated = false
 
     fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
 
@@ -198,6 +205,7 @@ class NearbySession(private val context: Context) {
         startInviteTimeout()
         disconnectActiveGatt()
         inviteDescriptorReady = false
+        mtuNegotiated = false
 
         activeGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             remoteDevice.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
@@ -383,6 +391,7 @@ class NearbySession(private val context: Context) {
         runCatching { activeGatt?.disconnect() }
         runCatching { activeGatt?.close() }
         activeGatt = null
+        mtuNegotiated = false
     }
 
     @SuppressLint("MissingPermission")
@@ -568,7 +577,14 @@ class NearbySession(private val context: Context) {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
-                    gatt.discoverServices()
+                    // Request a larger ATT MTU before service discovery so the
+                    // invite write and response notification carry the full
+                    // JSON in a single ATT PDU instead of being truncated to
+                    // ~20 bytes by the default 23-byte MTU.
+                    val requested = runCatching { gatt.requestMtu(REQUESTED_ATT_MTU) }.getOrDefault(false)
+                    if (!requested) {
+                        gatt.discoverServices()
+                    }
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     if (_sessionState.value == NearbySessionState.INVITE_PENDING) {
@@ -583,6 +599,15 @@ class NearbySession(private val context: Context) {
                     }
                 }
             }
+        }
+
+        @SuppressLint("MissingPermission")
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            // Even if MTU negotiation failed (status != GATT_SUCCESS) the link
+            // remains usable at the prior MTU; just continue and let the write
+            // surface a truncation failure if the JSON is too large.
+            mtuNegotiated = status == BluetoothGatt.GATT_SUCCESS && mtu >= MIN_USABLE_ATT_MTU
+            gatt.discoverServices()
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
