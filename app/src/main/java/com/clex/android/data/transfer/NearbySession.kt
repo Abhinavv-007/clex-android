@@ -108,9 +108,28 @@ class NearbySession(private val context: Context) {
     private val _resolvedRoute = MutableStateFlow<ResolvedTransferRoute?>(null)
     val resolvedRoute: StateFlow<ResolvedTransferRoute?> = _resolvedRoute.asStateFlow()
 
+    /**
+     * Which side of the current Clex Link handshake the local device is
+     * acting as, if any. SENDER when we initiated by calling [sendInvite],
+     * RECEIVER when we accepted an incoming invite via [acceptInvite],
+     * `null` while there is no in-flight handshake. The workspace UI uses
+     * this to gate sender-vs-receiver `LaunchedEffect`s that listen to
+     * [resolvedRoute] so that during a tab Crossfade only the correct
+     * controller starts a transfer.
+     */
+    private val _currentRole = MutableStateFlow<NearbyRole?>(null)
+    val currentRole: StateFlow<NearbyRole?> = _currentRole.asStateFlow()
+
     private var cleanupJob: Job? = null
     private var inviteTimeoutJob: Job? = null
     private var discoveryRequested = false
+    // Cached result of peripheralSupported() captured when discovery was last
+    // requested. Tracks the device's advertising capability for the lifetime
+    // of the discovery session so that fallback transitions back to the
+    // "scanning" base state can pick the correct visible-vs-invisible variant
+    // (DISCOVERING vs SCAN_ONLY) instead of unconditionally re-asserting
+    // DISCOVERING and silently flipping a scan-only phone to "visible".
+    private var canAdvertise = false
 
     private val bluetoothManager: BluetoothManager? by lazy {
         context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
@@ -178,10 +197,11 @@ class NearbySession(private val context: Context) {
         _nearbyDevices.value = emptyList()
         _inboundInvite.value = null
         _resolvedRoute.value = null
+        _currentRole.value = null
         responseSubscriberAddress = null
         inviteDescriptorReady = false
 
-        val canAdvertise = peripheralSupported()
+        canAdvertise = peripheralSupported()
         if (canAdvertise) {
             // Open the GATT server first; advertise is deferred until
             // onServiceAdded fires so peers don't connect before the
@@ -189,13 +209,21 @@ class NearbySession(private val context: Context) {
             startGattServer()
         }
         startScan()
-        _sessionState.value = if (canAdvertise) {
-            NearbySessionState.DISCOVERING
-        } else {
-            NearbySessionState.SCAN_ONLY
-        }
+        _sessionState.value = scanningBaseState()
         startStaleCleanup()
     }
+
+    /**
+     * The "we are scanning, no in-flight invite" base state. Returns
+     * [NearbySessionState.DISCOVERING] when the device can also advertise
+     * itself, or [NearbySessionState.SCAN_ONLY] when it can only scan.
+     * Every fallback transition that returns to "just scanning" must use
+     * this rather than a hardcoded `DISCOVERING`, otherwise scan-only phones
+     * will silently lose their "invisible" indicator after the first invite,
+     * decline, timeout, or peer-disconnect.
+     */
+    private fun scanningBaseState(): NearbySessionState =
+        if (canAdvertise) NearbySessionState.DISCOVERING else NearbySessionState.SCAN_ONLY
 
     /** Stop BLE scanning and advertising. */
     fun stopDiscovery() {
@@ -210,6 +238,7 @@ class NearbySession(private val context: Context) {
         disconnectActiveGatt()
         _inboundInvite.value = null
         if (_sessionState.value != NearbySessionState.RESOLVED) {
+            _currentRole.value = null
             _sessionState.value = NearbySessionState.IDLE
         }
     }
@@ -224,7 +253,7 @@ class NearbySession(private val context: Context) {
 
         val remoteDevice = runCatching { bluetoothAdapter?.getRemoteDevice(device.bleAddress) }.getOrNull()
             ?: run {
-                _sessionState.value = NearbySessionState.DISCOVERING
+                _sessionState.value = scanningBaseState()
                 return
             }
 
@@ -237,6 +266,7 @@ class NearbySession(private val context: Context) {
             networkFingerprint = currentWifiFingerprint(),
             routeHint = null,
         )
+        _currentRole.value = NearbyRole.SENDER
         _resolvedRoute.value = null
         _sessionState.value = NearbySessionState.INVITE_PENDING
         startInviteTimeout()
@@ -255,6 +285,7 @@ class NearbySession(private val context: Context) {
     fun acceptInvite() {
         val invite = _inboundInvite.value ?: return
         inviteTimeoutJob?.cancel()
+        _currentRole.value = NearbyRole.RECEIVER
         _sessionState.value = NearbySessionState.NEGOTIATING
 
         scope.launch {
@@ -271,7 +302,8 @@ class NearbySession(private val context: Context) {
         notifyInviteResponse(status = RESPONSE_STATUS_DECLINED, resolved = null)
         _inboundInvite.value = null
         _resolvedRoute.value = null
-        _sessionState.value = if (discoveryRequested) NearbySessionState.DISCOVERING else NearbySessionState.IDLE
+        _currentRole.value = null
+        _sessionState.value = if (discoveryRequested) scanningBaseState() else NearbySessionState.IDLE
     }
 
     /** Cancel a pending outbound invite. */
@@ -279,7 +311,8 @@ class NearbySession(private val context: Context) {
         inviteTimeoutJob?.cancel()
         disconnectActiveGatt()
         outboundInvite = null
-        _sessionState.value = if (discoveryRequested) NearbySessionState.DISCOVERING else NearbySessionState.IDLE
+        _currentRole.value = null
+        _sessionState.value = if (discoveryRequested) scanningBaseState() else NearbySessionState.IDLE
     }
 
     /** Full teardown — call from dispose. */
@@ -289,6 +322,7 @@ class NearbySession(private val context: Context) {
         _nearbyDevices.value = emptyList()
         _inboundInvite.value = null
         _resolvedRoute.value = null
+        _currentRole.value = null
         outboundInvite = null
         inboundInviteDevice = null
     }
@@ -628,8 +662,16 @@ class NearbySession(private val context: Context) {
         }
 
         override fun onScanFailed(errorCode: Int) {
-            if (_sessionState.value == NearbySessionState.DISCOVERING) {
-                _sessionState.value = NearbySessionState.ADVERTISING
+            when (_sessionState.value) {
+                NearbySessionState.DISCOVERING ->
+                    // Scan failed but we can still be visible to peers via
+                    // our own advertise.
+                    _sessionState.value = NearbySessionState.ADVERTISING
+                NearbySessionState.SCAN_ONLY ->
+                    // No advertising fallback available; the device is
+                    // effectively offline for Clex Link.
+                    _sessionState.value = NearbySessionState.UNAVAILABLE
+                else -> Unit
             }
         }
     }
@@ -667,8 +709,9 @@ class NearbySession(private val context: Context) {
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     if (_sessionState.value == NearbySessionState.INVITE_PENDING) {
+                        _currentRole.value = null
                         _sessionState.value = if (discoveryRequested) {
-                            NearbySessionState.DISCOVERING
+                            scanningBaseState()
                         } else {
                             NearbySessionState.IDLE
                         }
@@ -713,7 +756,8 @@ class NearbySession(private val context: Context) {
         ) {
             if (characteristic.uuid != CLEX_INVITE_UUID || status != BluetoothGatt.GATT_SUCCESS) {
                 if (_sessionState.value == NearbySessionState.INVITE_PENDING) {
-                    _sessionState.value = if (discoveryRequested) NearbySessionState.DISCOVERING else NearbySessionState.IDLE
+                    _currentRole.value = null
+                    _sessionState.value = if (discoveryRequested) scanningBaseState() else NearbySessionState.IDLE
                 }
             }
         }
@@ -734,12 +778,14 @@ class NearbySession(private val context: Context) {
                         _resolvedRoute.value = response
                         _sessionState.value = NearbySessionState.RESOLVED
                     } else {
-                        _sessionState.value = if (discoveryRequested) NearbySessionState.DISCOVERING else NearbySessionState.IDLE
+                        _currentRole.value = null
+                        _sessionState.value = if (discoveryRequested) scanningBaseState() else NearbySessionState.IDLE
                     }
                 }
                 RESPONSE_STATUS_DECLINED -> {
                     disconnectActiveGatt()
-                    _sessionState.value = if (discoveryRequested) NearbySessionState.DISCOVERING else NearbySessionState.IDLE
+                    _currentRole.value = null
+                    _sessionState.value = if (discoveryRequested) scanningBaseState() else NearbySessionState.IDLE
                 }
             }
         }
@@ -765,7 +811,8 @@ class NearbySession(private val context: Context) {
                 responseSubscriberAddress = null
                 if (_sessionState.value == NearbySessionState.INVITE_RECEIVED) {
                     _inboundInvite.value = null
-                    _sessionState.value = if (discoveryRequested) NearbySessionState.DISCOVERING else NearbySessionState.IDLE
+                    _currentRole.value = null
+                    _sessionState.value = if (discoveryRequested) scanningBaseState() else NearbySessionState.IDLE
                 }
             }
         }
@@ -853,7 +900,8 @@ class NearbySession(private val context: Context) {
             ) {
                 disconnectActiveGatt()
                 _inboundInvite.value = null
-                _sessionState.value = if (discoveryRequested) NearbySessionState.DISCOVERING else NearbySessionState.IDLE
+                _currentRole.value = null
+                _sessionState.value = if (discoveryRequested) scanningBaseState() else NearbySessionState.IDLE
             }
         }
     }

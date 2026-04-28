@@ -67,3 +67,15 @@ data class ResolvedTransferRoute(
     val roomCode: String,
     val connectionKind: ConnectionKind,
 )
+
+/**
+ * Which side of a Clex Link handshake this device is acting as. Used by the
+ * workspace UI to gate sender-vs-receiver `LaunchedEffect`s on `resolvedRoute`
+ * so that during a tab Crossfade only the correct controller starts a
+ * transfer (preventing a double-start when both tabs are momentarily
+ * composed).
+ */
+enum class NearbyRole {
+    SENDER,
+    RECEIVER,
+}
