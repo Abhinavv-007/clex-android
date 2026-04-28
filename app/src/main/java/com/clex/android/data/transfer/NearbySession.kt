@@ -30,6 +30,7 @@ import android.net.LinkAddress
 import android.os.Build
 import android.os.ParcelUuid
 import androidx.core.content.ContextCompat
+import com.clex.android.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -86,7 +87,7 @@ private const val INSTANCE_ID_KEY = "clex_instance_id"
  * local Bluetooth MAC since Android 6, so MAC-based self-filtering
  * never works).
  */
-private const val CLEX_MANUFACTURER_ID = 0xCE48
+private val CLEX_MANUFACTURER_ID: Int = BuildConfig.BLE_MANUFACTURER_ID
 private const val INSTANCE_ID_BYTES = 4
 
 private const val RESPONSE_STATUS_ACCEPTED = "accepted"

@@ -1,6 +1,7 @@
 package com.clex.android.data.transfer
 
 import android.content.Context
+import com.clex.android.BuildConfig
 import com.clex.android.data.ChainFileMeta
 import com.clex.android.data.ChainIdentityStore
 import com.clex.android.data.ClexChainApi
@@ -19,7 +20,7 @@ import org.webrtc.PeerConnectionFactory
 import java.io.File
 import java.util.UUID
 
-private const val SIGNALING_BASE_URL = "wss://signal.clex.in"
+private val SIGNALING_BASE_URL: String = BuildConfig.SIGNALING_BASE_URL
 private const val SHARE_WAIT_TIMEOUT_MS = 60_000L
 
 class TransferCoordinator(

@@ -6,15 +6,15 @@ This repo is the Android build only. It can be opened directly in Android Studio
 
 ## Current Release
 
-- Version: `1.9.11`
+- Version: `1.9.12`
 - Package: `com.clex.android`
 - Min SDK: `26`
 - Target SDK: `34`
 
 Distribution artifacts built locally from this project:
 
-- Universal APK: `dist/Clex-1.9.11-universal.apk`
-- Play bundle: `dist/Clex-1.9.11.aab`
+- Universal APK: `dist/Clex-1.9.12-universal.apk`
+- Play bundle: `dist/Clex-1.9.12.aab`
 
 ## What The App Includes
 
@@ -34,6 +34,7 @@ Distribution artifacts built locally from this project:
 - v1.9.9 R8 minification + resource shrinking enabled, SplashScreen API on cold start, WebRTC + theme pre-warm in `Application.onCreate`
 - v1.9.10 Workspace tab Crossfade → AnimatedContent (directional slides), full haptic feedback pass on tabs, invite overlay, and transfer headlines
 - v1.9.11 Vault tab Crossfade → AnimatedContent (directional slides), tab + success/failure haptics for Secret + Drive flows
+- v1.9.12 Build infrastructure: GitHub Actions CI (compile + test + lint + assemble debug/release), unit-test scaffolding with first JVM tests, BuildConfig extraction for the WebRTC signaling URL and BLE manufacturer ID
 
 ## Project Layout
 
@@ -100,12 +101,12 @@ Release outputs:
 For direct installs:
 
 - use the universal APK
-- public file name: `Clex-1.9.11-universal.apk`
+- public file name: `Clex-1.9.12-universal.apk`
 
 For Play Store upload:
 
 - use the `.aab` bundle
-- public file name: `Clex-1.9.11.aab`
+- public file name: `Clex-1.9.12.aab`
 
 See [RELEASES.md](RELEASES.md) for artifact names and signing notes.
 

@@ -7,10 +7,20 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.11"
-    const val versionCode = 201
+    const val versionName = "1.9.12"
+    const val versionCode = 202
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.12",
+            releasedOn = "28 Apr 2026",
+            notes = listOf(
+                "Build infrastructure pass — no user-visible behaviour changes.",
+                "GitHub Actions CI now runs on every PR: compile, unit tests, lint (with baseline), and both debug + release (R8) APK builds.",
+                "Unit-test scaffolding added with first JVM tests pinning SHA-256 hashing and MIME→category classification.",
+                "WebRTC signaling URL and the BLE manufacturer ID are now read from BuildConfig so a future debug/staging variant can swap endpoints without source changes."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.11",
             releasedOn = "28 Apr 2026",

@@ -1,0 +1,83 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: build + test + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Compile debug Kotlin
+        run: ./gradlew :app:compileDebugKotlin --stacktrace
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Lint (debug)
+        run: ./gradlew :app:lintDebug --stacktrace
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Assemble release APK (R8)
+        run: ./gradlew :app:assembleRelease --stacktrace
+
+      - name: Upload debug APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apks
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload release APKs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apks
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: |
+            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-debug.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
+          retention-days: 14
