@@ -95,12 +95,12 @@ Release outputs:
 For direct installs:
 
 - use the universal APK
-- public file name: `Clex-1.9.5-universal.apk`
+- public file name: `Clex-1.9.6-universal.apk`
 
 For Play Store upload:
 
 - use the `.aab` bundle
-- public file name: `Clex-1.9.5.aab`
+- public file name: `Clex-1.9.6.aab`
 
 See [RELEASES.md](RELEASES.md) for artifact names and signing notes.
 
