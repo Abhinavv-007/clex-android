@@ -685,6 +685,15 @@ class NearbySession(private val context: Context) {
 
         override fun onStartFailure(errorCode: Int) {
             advertisePending = false
+            // Mark advertising as unavailable for the rest of this discovery
+            // session so subsequent fallback transitions via scanningBaseState()
+            // also pick SCAN_ONLY rather than reverting to DISCOVERING. Without
+            // this, peripheralSupported() returning true at startDiscovery time
+            // but startAdvertise failing at runtime (e.g. system resource
+            // exhaustion, too many active advertisers) would let the next
+            // invite/decline/timeout silently flip the state back to
+            // DISCOVERING and hide the "INVISIBLE TO OTHER PHONES" banner.
+            canAdvertise = false
             if (_sessionState.value == NearbySessionState.DISCOVERING) {
                 _sessionState.value = NearbySessionState.SCAN_ONLY
             }

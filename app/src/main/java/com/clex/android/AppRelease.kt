@@ -7,10 +7,17 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.7"
-    const val versionCode = 197
+    const val versionName = "1.9.8"
+    const val versionCode = 198
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.8",
+            releasedOn = "28 Apr 2026",
+            notes = listOf(
+                "Fixed a follow-up edge case in the Clex Link 'invisible to other phones' state: if BLE peripheral capability looked available at the start of a discovery session but the advertise actually failed at runtime (e.g. too many active advertisers), the next invite cycle could silently revert the state from SCAN_ONLY to DISCOVERING and hide the banner. The runtime failure path now also caches the unavailable advertise capability so the banner stays sticky."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.7",
             releasedOn = "28 Apr 2026",

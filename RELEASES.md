@@ -21,6 +21,17 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.8
+
+Public artifact names:
+
+- `Clex-1.9.8-universal.apk`
+- `Clex-1.9.8.aab`
+
+Release notes:
+
+- Fixed a follow-up edge case in the Clex Link `SCAN_ONLY` state introduced in v1.9.7. `peripheralSupported()` was being captured into instance state once at `startDiscovery` time, but `advertiseCallback.onStartFailure` only updated `_sessionState` to `SCAN_ONLY` without also clearing the cached `canAdvertise` flag. So a phone whose chip looked capable but whose `startAdvertise` failed at runtime (system resource exhaustion, too many active advertisers) would correctly enter `SCAN_ONLY` immediately, but the next invite/decline/timeout would route through `scanningBaseState()` and silently revert to `DISCOVERING` because `canAdvertise` was still `true`. The runtime advertise failure now also flips `canAdvertise = false` so the SCAN_ONLY banner stays sticky for the rest of the session.
+
 ## v1.9.7
 
 Public artifact names:
