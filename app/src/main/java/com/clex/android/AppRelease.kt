@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.9"
-    const val versionCode = 199
+    const val versionName = "1.9.10"
+    const val versionCode = 200
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.10",
+            releasedOn = "28 Apr 2026",
+            notes = listOf(
+                "Workspace tab transitions now use a directional slide instead of a 220ms cross-fade. Moving from SEND → RECEIVE → TOOLS slides left, going back slides right, with a 200ms fade and a fast-out-slow-in spring. Both tabs are no longer composed at once during the swap.",
+                "Tactile feedback pass: tab switch produces a snap haptic, accepting a Clex Link invite produces a connect haptic, declining produces a press haptic, and the transfer headlines (CONNECTING, COMPLETE, FAILED) each fire their own haptic on entry on both sender and receiver. The workspace top-level tab selector also now haptics on switch.",
+                "(no behavioural changes — the transfer state machine, BLE flow, and signaling are untouched)"
+            )
+        ),
         ChangelogEntry(
             version = "1.9.9",
             releasedOn = "28 Apr 2026",

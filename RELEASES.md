@@ -21,6 +21,22 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.10
+
+Public artifact names:
+
+- `Clex-1.9.10-universal.apk`
+- `Clex-1.9.10.aab`
+
+Release notes:
+
+- Workspace tab transitions ported from `Crossfade(220ms)` to `AnimatedContent` with directional `slideIntoContainer` / `slideOutOfContainer` (260ms slide, 200ms fade, `FastOutSlowInEasing`). Tabs swap in the direction of travel instead of soft-fading; the two destinations are no longer composed simultaneously, removing the original Crossfade race that v1.9.7 had to role-gate around.
+- Haptic feedback pass on the workspace surface:
+    - Tab selector: `CxHaptics.snap` on tab change.
+    - Clex Link invite overlay: `CxHaptics.connect` on accept, `CxHaptics.press` on decline.
+    - Transfer state transitions (sender + receiver): `CxHaptics.connect` on `CONNECTING`, `CxHaptics.success` on `COMPLETE`, `CxHaptics.error` on `FAILED`. Idle and intermediate spinner states are intentionally silent.
+- No behavioural changes to the transfer state machine, BLE flow, or signaling.
+
 ## v1.9.9
 
 Public artifact names:
