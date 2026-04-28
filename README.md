@@ -6,15 +6,15 @@ This repo is the Android build only. It can be opened directly in Android Studio
 
 ## Current Release
 
-- Version: `1.9.8`
+- Version: `1.9.9`
 - Package: `com.clex.android`
 - Min SDK: `26`
 - Target SDK: `34`
 
 Distribution artifacts built locally from this project:
 
-- Universal APK: `dist/Clex-1.9.8-universal.apk`
-- Play bundle: `dist/Clex-1.9.8.aab`
+- Universal APK: `dist/Clex-1.9.9-universal.apk`
+- Play bundle: `dist/Clex-1.9.9.aab`
 
 ## What The App Includes
 
@@ -31,6 +31,7 @@ Distribution artifacts built locally from this project:
 - v1.9.6 Clex Link invite / accept MTU fix — invites and accept replies no longer truncated, end-to-end nearby hand-off works
 - v1.9.7 Clex Link scan-only state persistence + workspace tab Crossfade race fix
 - v1.9.8 Clex Link scan-only follow-up: keep `canAdvertise=false` on runtime advertise failure
+- v1.9.9 R8 minification + resource shrinking enabled, SplashScreen API on cold start, WebRTC + theme pre-warm in `Application.onCreate`
 
 ## Project Layout
 
@@ -97,12 +98,12 @@ Release outputs:
 For direct installs:
 
 - use the universal APK
-- public file name: `Clex-1.9.8-universal.apk`
+- public file name: `Clex-1.9.9-universal.apk`
 
 For Play Store upload:
 
 - use the `.aab` bundle
-- public file name: `Clex-1.9.8.aab`
+- public file name: `Clex-1.9.9.aab`
 
 See [RELEASES.md](RELEASES.md) for artifact names and signing notes.
 

@@ -5,7 +5,17 @@
         <item name="android:navigationBarColor">@android:color/black</item>
         <item name="android:windowBackground">@android:color/black</item>
     </style>
-    <style name="Theme.Clex.Splash" parent="Theme.Clex">
-        <item name="android:windowBackground">@android:color/black</item>
+
+    <!--
+        SplashScreen API theme. Inherits from Theme.SplashScreen, declares the
+        post-splash app theme (Theme.Clex), and uses the launcher icon as the
+        splash icon on a black brand background. The androidx splashscreen lib
+        backports this to API 26+ so all our supported devices get a
+        consistent first-frame experience.
+    -->
+    <style name="Theme.Clex.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Clex</item>
     </style>
 </resources>

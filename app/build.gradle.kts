@@ -20,8 +20,8 @@ android {
         applicationId = "com.clex.android"
         minSdk = 26
         targetSdk = 34
-        versionCode = 198
-        versionName = "1.9.8"
+        versionCode = 199
+        versionName = "1.9.9"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -44,12 +44,18 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            // Match release behaviour of disabling minify in debug for fast
+            // edit-build-run cycles. Lint runs against debug as well.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 
@@ -91,6 +97,8 @@ dependencies {
     implementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.7")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
 
