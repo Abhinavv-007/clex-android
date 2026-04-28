@@ -7,10 +7,18 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.6"
-    const val versionCode = 196
+    const val versionName = "1.9.7"
+    const val versionCode = 197
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.7",
+            releasedOn = "28 Apr 2026",
+            notes = listOf(
+                "Fixed Clex Link 'invisible to other phones' state flickering off after every invite, decline, timeout, or peer disconnect on phones whose Bluetooth chip can't broadcast as a peripheral. The scan-only state — and its banner — now stick across the whole discovery session.",
+                "Fixed a workspace tab Crossfade race where accepting a Clex Link invite from the SEND or TOOLS tab could double-fire the sender-side controller against the receiver's room code. The auto-handoff effects on both sides are now gated on the device's role in the current handshake."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.6",
             releasedOn = "28 Apr 2026",

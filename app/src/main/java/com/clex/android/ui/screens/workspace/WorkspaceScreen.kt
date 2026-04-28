@@ -47,6 +47,7 @@ import com.clex.android.data.tools.WorkspaceToolResult
 import com.clex.android.data.tools.WorkspaceToolRunner
 import com.clex.android.data.transfer.NearbyDevice
 import com.clex.android.data.transfer.NearbyInvite
+import com.clex.android.data.transfer.NearbyRole
 import com.clex.android.data.transfer.NearbySession
 import com.clex.android.data.transfer.NearbySessionState
 import com.clex.android.data.transfer.ResolvedTransferRoute
@@ -415,6 +416,7 @@ private fun LiveSendTab(
     val nearbyState by nearbySession.sessionState.collectAsState()
     val nearbyDevices by nearbySession.nearbyDevices.collectAsState()
     val resolvedRoute by nearbySession.resolvedRoute.collectAsState()
+    val currentNearbyRole by nearbySession.currentRole.collectAsState()
 
     // When send route changes, sync underlying TransferMethod
     LaunchedEffect(sendRoute) {
@@ -445,9 +447,16 @@ private fun LiveSendTab(
         }
     }
 
-    // When Clex Link resolves a route, hand it off to controller
-    LaunchedEffect(resolvedRoute) {
+    // When Clex Link resolves a route, hand it off to the sender controller —
+    // but only on the device that initiated the invite. The receiver-side
+    // controller is driven by a separate LaunchedEffect in LiveReceiveTab,
+    // and during the workspace tab Crossfade both LiveSendTab and
+    // LiveReceiveTab are momentarily composed at once, so without the role
+    // gate accepting an invite from the SEND tab would race-fire BOTH sides
+    // against the same room code.
+    LaunchedEffect(resolvedRoute, currentNearbyRole) {
         val route = resolvedRoute ?: return@LaunchedEffect
+        if (currentNearbyRole != NearbyRole.SENDER) return@LaunchedEffect
         controller.startTransfer(roomCode = route.roomCode, overrideMethod = route.method)
     }
 
@@ -719,10 +728,16 @@ private fun LiveReceiveTab(
     // resolved route so it can connect to the negotiated transfer.
     val nearbyState by nearbySession.sessionState.collectAsState()
     val resolvedRoute by nearbySession.resolvedRoute.collectAsState()
+    val currentNearbyRole by nearbySession.currentRole.collectAsState()
 
-    // When receiver accepts and route resolves, connect to transfer
-    LaunchedEffect(resolvedRoute, nearbyState) {
-        if (nearbyState == NearbySessionState.RESOLVED) {
+    // When receiver accepts and route resolves, connect to transfer. Gated
+    // on currentNearbyRole == RECEIVER so that on the sender device — where
+    // resolvedRoute also transitions to RESOLVED — the receiver controller
+    // does not also try to connect to its own room code mid-Crossfade.
+    LaunchedEffect(resolvedRoute, nearbyState, currentNearbyRole) {
+        if (nearbyState == NearbySessionState.RESOLVED &&
+            currentNearbyRole == NearbyRole.RECEIVER
+        ) {
             val route = resolvedRoute ?: return@LaunchedEffect
             controller.setMethod(route.method)
             controller.connect(route.roomCode)

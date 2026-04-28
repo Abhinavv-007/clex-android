@@ -21,6 +21,18 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.7
+
+Public artifact names:
+
+- `Clex-1.9.7-universal.apk`
+- `Clex-1.9.7.aab`
+
+Release notes:
+
+- Clex Link "scan-only" devices (phones whose Bluetooth chip can't broadcast as a peripheral) now keep their `SCAN_ONLY` state — and the "INVISIBLE TO OTHER PHONES" banner — across invite, decline, timeout, and peer-disconnect cycles, instead of silently flipping back to `DISCOVERING` and misleading the user into thinking their phone had become visible to peers.
+- Accepting a Clex Link invite from the SEND or TOOLS tab no longer race-fires the sender-side `startTransfer` against the receiver's own connection during the workspace tab Crossfade. The SEND/RECEIVE auto-handoff effects are now gated on the device's role in the current handshake, so only the controller that matches the local role fires.
+
 ## v1.9.6
 
 Public artifact names:
