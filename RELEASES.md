@@ -21,6 +21,22 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.11
+
+Public artifact names:
+
+- `Clex-1.9.11-universal.apk`
+- `Clex-1.9.11.aab`
+
+Release notes:
+
+- Vault tab transitions ported from `Crossfade(220ms)` to `AnimatedContent` with directional `slideIntoContainer` / `slideOutOfContainer` (260ms slide, 200ms fade, `FastOutSlowInEasing`). NOTES → SECRET → CLOUD → SETTINGS slides left in forward direction, right in reverse.
+- `VaultTabSelector` now produces `CxHaptics.snap` on tab change (suppressed when re-tapping the active tab) — matches the workspace tab selector behaviour.
+- Vault success/failure haptics:
+    - Secret link creation → `CxHaptics.success` on confirmation, `CxHaptics.error` on failure.
+    - Drive upload → `CxHaptics.success` on completion, `CxHaptics.error` on failure.
+- No behavioural changes to the Vault state machine, encryption, or signaling.
+
 ## v1.9.10
 
 Public artifact names:

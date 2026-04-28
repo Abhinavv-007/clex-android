@@ -7,10 +7,19 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.10"
-    const val versionCode = 200
+    const val versionName = "1.9.11"
+    const val versionCode = 201
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.11",
+            releasedOn = "28 Apr 2026",
+            notes = listOf(
+                "Vault tab transitions ported from a 220ms cross-fade to AnimatedContent with directional slides — moving NOTES → SECRET → CLOUD → SETTINGS slides left, going back slides right, with a 200ms fade overlap.",
+                "Vault tab selector now produces a snap haptic on tab change.",
+                "Vault success/failure haptics: creating a Secret link buzzes 'success' on confirmation and 'error' on failure; uploading to Drive buzzes the same ladder when the upload completes or fails."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.10",
             releasedOn = "28 Apr 2026",
