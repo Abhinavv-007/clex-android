@@ -8,8 +8,14 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -229,13 +235,35 @@ fun WorkspaceScreen() {
             TabSelector(currentTab) { currentTab = it }
 
             // ── Content ──
-            Crossfade(
+            // AnimatedContent with directional slides keyed by tab ordinal so
+            // tabs animate in/out in the direction of travel rather than the
+            // old Crossfade(220ms) which kept both tabs composed at once.
+            // The role-gated Clex Link handoff effects (sender + receiver) no
+            // longer race during the transition because the exiting tab is
+            // already on its way out, but switching to a directional slide
+            // also makes the transition feel intentional instead of soft.
+            AnimatedContent(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 targetState = currentTab,
-                animationSpec = tween(220),
-                label = "tabContent"
+                transitionSpec = {
+                    val forward = targetState.ordinal > initialState.ordinal
+                    val slideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+                    val fadeSpec = tween<Float>(durationMillis = 200, easing = LinearEasing)
+                    val enter = slideIntoContainer(
+                        towards = if (forward) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = slideSpec,
+                    ) + fadeIn(animationSpec = fadeSpec)
+                    val exit = slideOutOfContainer(
+                        towards = if (forward) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = slideSpec,
+                    ) + fadeOut(animationSpec = fadeSpec)
+                    enter togetherWith exit using SizeTransform(clip = false)
+                },
+                label = "tabContent",
             ) { tab ->
                 RevealFromBottom(visible = tabVisible) {
                     when (tab) {
@@ -260,15 +288,20 @@ fun WorkspaceScreen() {
         // tab is selected.
         val currentInvite = inboundInvite
         if (nearbyState == NearbySessionState.INVITE_RECEIVED && currentInvite != null) {
+            val hapticView = rememberHapticView()
             ClexLinkInvitePrompt(
                 invite = currentInvite,
                 onAccept = {
+                    CxHaptics.connect(context)
                     if (currentTab != WorkspaceTab.RECEIVE) {
                         currentTab = WorkspaceTab.RECEIVE
                     }
                     nearbySession.acceptInvite()
                 },
-                onDecline = { nearbySession.declineInvite() }
+                onDecline = {
+                    CxHaptics.press(hapticView)
+                    nearbySession.declineInvite()
+                }
             )
         }
     }
@@ -296,6 +329,7 @@ private fun TabSelector(
 ) {
     val colors = CxTheme.colors
     val tabs = WorkspaceTab.entries
+    val hapticView = rememberHapticView()
 
     Row(
         modifier = Modifier
@@ -325,7 +359,10 @@ private fun TabSelector(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { onSelect(tab) }
+                    ) {
+                        if (!isActive) CxHaptics.snap(hapticView)
+                        onSelect(tab)
+                    }
                     .padding(vertical = 14.dp, horizontal = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -458,6 +495,20 @@ private fun LiveSendTab(
         val route = resolvedRoute ?: return@LaunchedEffect
         if (currentNearbyRole != NearbyRole.SENDER) return@LaunchedEffect
         controller.startTransfer(roomCode = route.roomCode, overrideMethod = route.method)
+    }
+
+    // Tactile transitions for the headline transfer states. Fires once per
+    // entry into each state, on the sender side: COMPLETE → triumphant
+    // pattern, FAILED → hard buzz, CONNECTING → light double-tap. Idle and
+    // intermediate spinner states intentionally produce no haptic so the
+    // device only buzzes at moments the user actually changed lanes.
+    LaunchedEffect(transferState.state) {
+        when (transferState.state) {
+            TransferState.COMPLETE -> CxHaptics.success(context)
+            TransferState.FAILED -> CxHaptics.error(context)
+            TransferState.CONNECTING -> CxHaptics.connect(context)
+            else -> Unit
+        }
     }
 
     LaunchedEffect(transferState.shareExpiresAtMillis, transferState.state, transferState.roomCode) {
@@ -718,10 +769,23 @@ private fun LiveReceiveTab(
     controller: WorkspaceReceiverController,
     nearbySession: NearbySession,
 ) {
+    val context = LocalContext.current
     val transferState by controller.transferState.collectAsState()
     val saveMessage by controller.saveMessage.collectAsState()
     var roomCodeInput by rememberSaveable { mutableStateOf("") }
     val scrollState = rememberScrollState()
+
+    // Same per-state haptic ladder as the sender side. Receiver-side
+    // COMPLETE means a file actually landed on this device, which is the
+    // moment that most warrants a triumphant pattern.
+    LaunchedEffect(transferState.state) {
+        when (transferState.state) {
+            TransferState.COMPLETE -> CxHaptics.success(context)
+            TransferState.FAILED -> CxHaptics.error(context)
+            TransferState.CONNECTING -> CxHaptics.connect(context)
+            else -> Unit
+        }
+    }
 
     // Clex Link inbound invite state — the invite prompt itself is rendered
     // as a global overlay in WorkspaceScreen; this tab only watches for the
