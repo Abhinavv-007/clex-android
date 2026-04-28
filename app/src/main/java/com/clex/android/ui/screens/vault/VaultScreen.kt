@@ -8,13 +8,17 @@ import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.*
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
@@ -113,13 +117,32 @@ fun VaultScreen() {
             VaultTabSelector(currentTab) { currentTab = it }
 
             // ── Content ──
-            Crossfade(
+            // Match the workspace tab transition shape (v1.9.10): directional
+            // slides keyed by ordinal so vault tabs swap in the direction of
+            // travel rather than soft-fading. Order: NOTES → SECRET → CLOUD →
+            // SETTINGS.
+            AnimatedContent(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 targetState = currentTab,
-                animationSpec = tween(220),
-                label = "vaultTab"
+                transitionSpec = {
+                    val forward = targetState.ordinal > initialState.ordinal
+                    val slideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
+                    val fadeSpec = tween<Float>(durationMillis = 200, easing = LinearEasing)
+                    val enter = slideIntoContainer(
+                        towards = if (forward) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = slideSpec,
+                    ) + fadeIn(animationSpec = fadeSpec)
+                    val exit = slideOutOfContainer(
+                        towards = if (forward) AnimatedContentTransitionScope.SlideDirection.Left
+                        else AnimatedContentTransitionScope.SlideDirection.Right,
+                        animationSpec = slideSpec,
+                    ) + fadeOut(animationSpec = fadeSpec)
+                    enter togetherWith exit using SizeTransform(clip = false)
+                },
+                label = "vaultTab",
             ) { tab ->
                 when (tab) {
                     VaultTab.NOTES -> NotesTab(tabVisible)
@@ -155,6 +178,7 @@ private fun VaultTabSelector(
     onSelect: (VaultTab) -> Unit
 ) {
     val colors = CxTheme.colors
+    val hapticView = rememberHapticView()
 
     Row(
         modifier = Modifier
@@ -190,7 +214,10 @@ private fun VaultTabSelector(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { onSelect(tab) }
+                        onClick = {
+                            if (!isActive) CxHaptics.snap(hapticView)
+                            onSelect(tab)
+                        }
                     )
                     .padding(vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -1161,8 +1188,10 @@ private fun SecretShareTab(visible: Boolean) {
                                             expiresAt = secret.expiresAt,
                                             policy = secret.policy
                                         )
+                                        CxHaptics.success(context)
                                     }.onFailure { error ->
                                         submitError = error.message ?: "Vault could not create the secret link."
+                                        CxHaptics.error(context)
                                     }
                                     isSubmitting = false
                                 }
@@ -1780,8 +1809,10 @@ private fun CloudShareTab(visible: Boolean) {
                                             }.onSuccess { result ->
                                                 uploadResult = result
                                                 selectedFiles = emptyList()
+                                                CxHaptics.success(context)
                                             }.onFailure { error ->
                                                 uploadError = error.message ?: "Drive upload failed."
+                                                CxHaptics.error(context)
                                             }
 
                                             isUploading = false
