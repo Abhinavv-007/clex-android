@@ -17,6 +17,9 @@ object AppRelease {
             notes = listOf(
                 "Fixed Clex Link invites and accept replies being silently dropped on every nearby connection. The BLE GATT link now negotiates a larger ATT MTU before service discovery so the invite and accept payloads travel intact instead of being truncated to ~20 bytes by the default 23-byte MTU.",
                 "End-to-end nearby hand-off (tap a device → invite arrives on the other phone → accept → transfer) now works on devices that support BLE peripheral mode.",
+                "Inbound Clex Link invites now show as a top-level overlay regardless of which workspace tab you're on, so invites arriving while you're on SEND or TOOLS no longer silently dismiss themselves.",
+                "Phones whose Bluetooth chip can't broadcast as a peripheral now show a clear 'invisible to other phones' banner instead of failing silently — they can still tap nearby Clex devices to send.",
+                "Removed the race where peers could connect to the GATT server before the Clex service was ready by deferring advertise start until the service is fully registered.",
                 "Refreshed the launcher icon at every density (mdpi through xxxhdpi, square and round) and the adaptive-icon foreground so the icon body fills more of the launcher tile and stays inside the safe zone on circle, squircle, and tear-drop masks across OEM launchers."
             )
         ),

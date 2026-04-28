@@ -31,7 +31,12 @@ Public artifact names:
 Release notes:
 
 - Fixed Clex Link invites and accept replies being silently dropped on every connection. The GATT link now negotiates a larger ATT MTU before service discovery, so the invite and accept JSON travel in a single ATT PDU instead of being truncated to ~20 bytes by the default 23-byte MTU. Tap-a-device → invite arrives → accept → transfer hand-off now works end-to-end on devices that support BLE peripheral mode.
+- Inbound Clex Link invites now appear as a top-level overlay regardless of which workspace tab is selected, so an invite arriving while the user is on SEND or TOOLS no longer silently dismisses itself.
+- Devices whose Bluetooth chip can't broadcast as a peripheral (no `bluetoothLeAdvertiser`, or `isMultipleAdvertisementSupported() == false`) now report a dedicated "scan-only" state and surface a banner explaining they're invisible to peers, instead of failing silently. Such phones can still scan for and invite peers that do advertise.
+- The GATT server now defers `startAdvertising` until `onServiceAdded` confirms the Clex service is queryable, removing the race where peers connect before the receiver's service is ready.
+- Self-discovery is suppressed via a per-install instance ID broadcast in manufacturer-specific data, replacing the broken Android 6+ MAC-based filter that always returned `02:00:00:00:00:00`.
 - Refreshed the launcher icon. The mipmap PNGs (mdpi → xxxhdpi, square + round) and the adaptive-icon foreground are regenerated from a single tightened master so the icon body fills more of the launcher tile and respects the 66/108 adaptive-icon safe zone on circle, squircle, and tear-drop masks across OEM launchers.
+- Dropped the `ACCESS_FINE_LOCATION` permission on SDK 31+ (it was only needed for legacy BLE scans pre-Android 12).
 
 ## v1.9.5
 
