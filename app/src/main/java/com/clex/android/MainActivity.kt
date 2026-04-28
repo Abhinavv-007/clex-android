@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
@@ -48,6 +49,12 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install the SplashScreen API before super.onCreate so the splash
+        // owns the very first frame on cold start. The androidx splashscreen
+        // library backports this to API 26+, giving every supported device
+        // a single consistent splash experience instead of the OEM default.
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIncomingIntent(intent)

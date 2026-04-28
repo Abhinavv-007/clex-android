@@ -106,6 +106,18 @@ private object PeerConnectionFactoryHolder {
     }
 }
 
+/**
+ * Tiny façade that lets the Application class warm the WebRTC native libs +
+ * factory on a background thread during cold start. Calling `warm` outside
+ * the workspace flow is safe because [PeerConnectionFactoryHolder.get]
+ * already de-duplicates initialisation.
+ */
+object PeerConnectionFactoryWarmer {
+    fun warm(context: Context) {
+        PeerConnectionFactoryHolder.get(context.applicationContext)
+    }
+}
+
 class WorkspaceSenderController(private val context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val stateMachine = TransferStateMachine()

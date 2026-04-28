@@ -21,6 +21,19 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.9
+
+Public artifact names:
+
+- `Clex-1.9.9-universal.apk`
+- `Clex-1.9.9.aab`
+
+Release notes:
+
+- Release builds now run through R8 (`isMinifyEnabled = true`, `isShrinkResources = true`) with proguard rules covering WebRTC JNI, OkHttp/Okio, PDFBox-Android, Apache POI / XMLBeans / OpenXML schemas, ZXing, and the Clex `Application` subclass. Build-tooling-only references (OSGi, FindBugs, aQute) are silenced via `-dontwarn` since they aren't on the Android runtime classpath. Smaller install footprint and faster cold start.
+- Cold start now installs the SplashScreen API (`androidx.core:core-splashscreen`) so the very first frame is the Clex brand mark on a black background instead of the OEM splash. The post-splash transition into the workspace is handled by the platform.
+- Added a `ClexApplication` subclass (registered in the manifest) that pre-warms the WebRTC `PeerConnectionFactory` on a background dispatcher and initialises the theme manager early, removing the ~150–300ms hitch on first transfer and the one-frame light/dark theme flash on cold start.
+
 ## v1.9.8
 
 Public artifact names:

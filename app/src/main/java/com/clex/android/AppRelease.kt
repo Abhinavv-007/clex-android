@@ -7,10 +7,20 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.8"
-    const val versionCode = 198
+    const val versionName = "1.9.9"
+    const val versionCode = 199
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.9",
+            releasedOn = "28 Apr 2026",
+            notes = listOf(
+                "Release builds now ship through R8 minification and resource shrinking. Smaller download, smaller install footprint, and faster cold start because dead code from PDFBox, Apache POI, ZXing, and the WebRTC native bindings is stripped instead of bundled.",
+                "Cold start now uses the Android 12+ SplashScreen API (backported to API 26+) so the very first frame is the Clex brand mark on a black background, not the OEM default. The post-splash transition into the workspace is handled by the platform.",
+                "Native WebRTC libraries are now pre-warmed on a background thread during `Application.onCreate`, removing the ~150–300ms hitch the first time the workspace opens a transfer.",
+                "Theme manager now initialises in `Application.onCreate` instead of `MainActivity.onCreate` so dark/light mode is applied to the very first composed frame rather than flashing the wrong theme for one frame on cold start."
+            )
+        ),
         ChangelogEntry(
             version = "1.9.8",
             releasedOn = "28 Apr 2026",
