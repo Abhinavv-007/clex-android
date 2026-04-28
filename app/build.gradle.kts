@@ -20,12 +20,19 @@ android {
         applicationId = "com.clex.android"
         minSdk = 26
         targetSdk = 34
-        versionCode = 201
-        versionName = "1.9.11"
+        versionCode = 202
+        versionName = "1.9.12"
 
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Backend protocol constants surfaced via BuildConfig so a future
+        // staging/debug-only variant can swap them without source changes.
+        buildConfigField("String", "SIGNALING_BASE_URL", "\"wss://signal.clex.in\"")
+        buildConfigField("int", "BLE_MANUFACTURER_ID", "0xCE48")
     }
 
     signingConfigs {
@@ -79,6 +86,11 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    lint {
+        baseline = file("lint-baseline.xml")
     }
 
     composeOptions {
@@ -124,4 +136,16 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // ── Test scaffolding ──
+    // JVM unit tests for pure Kotlin/Java logic that doesn't touch
+    // android.* (hashing, MIME categorisation, JSON encode/decode, etc.).
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+
+    // Instrumented tests for code that needs android.* APIs (Vault
+    // crypto uses android.util.Base64, etc.). Run via
+    // `./gradlew connectedDebugAndroidTest` against an emulator/device.
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
 }

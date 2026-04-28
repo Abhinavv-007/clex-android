@@ -21,6 +21,21 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.12
+
+Public artifact names:
+
+- `Clex-1.9.12-universal.apk`
+- `Clex-1.9.12.aab`
+
+Release notes:
+
+- Build infrastructure pass — no user-visible behaviour changes.
+- New GitHub Actions CI workflow (`.github/workflows/ci.yml`) runs on every PR and `main` push: compiles debug Kotlin, runs unit tests, runs lint (against a checked-in baseline), and builds both debug and R8-minified release APKs. Artifacts (debug APK, release APKs, lint report, unit-test report) are uploaded with 14-day retention.
+- Lint baseline (`app/lint-baseline.xml`) snapshots pre-existing `MissingPermission` warnings on the Bluetooth call sites in `NearbySession.kt`; CI now flags only **new** lint regressions instead of the whole pre-existing surface.
+- Unit-test scaffolding added — `junit:4.13.2` + `org.json` for JVM tests, `androidx.test.ext:junit` + `androidx.test:runner` for instrumented tests. First concrete tests pin `ClexChainApi.hashBytes` (SHA-256 of empty + `"abc"`) and `ClexChainApi.fileCategory` across all branches (image, video, audio, pdf, archive, document, other).
+- BuildConfig surfaces the WebRTC signaling URL (`wss://signal.clex.in`) and the BLE manufacturer ID (`0xCE48`) via `buildConfigField` entries in `app/build.gradle.kts`. `TransferCoordinator` and `NearbySession` now read from `BuildConfig` so a future debug/staging variant can swap endpoints without touching source. The existing values are unchanged so production behaviour is identical.
+
 ## v1.9.11
 
 Public artifact names:
