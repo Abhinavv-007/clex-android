@@ -222,17 +222,23 @@ object WordToPdfTool {
         if (text.isBlank()) return listOf("")
         val words = text.split(" ")
         val lines = mutableListOf<String>()
-        var currentLine = StringBuilder()
+        val currentLine = StringBuilder()
 
         for (word in words) {
-            val testLine = if (currentLine.isEmpty()) word else "${currentLine} $word"
+            val originalLength = currentLine.length
+            if (originalLength > 0) {
+                currentLine.append(" ")
+            }
+            currentLine.append(word)
+            val testLine = currentLine.toString()
+
             val width = runCatching { font.getStringWidth(testLine) / 1000 * fontSize }
                 .getOrElse { testLine.length * fontSize * 0.5f }
-            if (width > maxWidth && currentLine.isNotEmpty()) {
-                lines += currentLine.toString()
-                currentLine = StringBuilder(word)
-            } else {
-                currentLine = StringBuilder(testLine)
+
+            if (width > maxWidth && originalLength > 0) {
+                lines += testLine.substring(0, originalLength)
+                currentLine.clear()
+                currentLine.append(word)
             }
         }
         if (currentLine.isNotEmpty()) lines += currentLine.toString()
