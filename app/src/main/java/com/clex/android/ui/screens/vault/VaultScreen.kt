@@ -2645,41 +2645,6 @@ private fun VaultSettingValueRow(
     }
 }
 
-data class SettingItem(val label: String, val value: String, val description: String)
-
-@Composable
-private fun SettingRow(item: SettingItem) {
-    val colors = CxTheme.colors
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.bgCard)
-            .border(1.dp, colors.borderSubtle)
-            .padding(CxSpacing.md)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            MonoText(
-                text = item.label,
-                fontSize = CxTypography.textSm,
-                fontWeight = CxTypography.weightBold,
-                color = colors.textPrimary
-            )
-            MonoText(
-                text = item.value,
-                fontSize = CxTypography.textXs,
-                color = colors.accent
-            )
-        }
-        Spacer(Modifier.height(CxSpacing.xs))
-        BodyText(text = item.description, fontSize = CxTypography.textXs)
-    }
-}
-
 @Composable
 private fun VaultPreferenceToggleRow(
     title: String,
