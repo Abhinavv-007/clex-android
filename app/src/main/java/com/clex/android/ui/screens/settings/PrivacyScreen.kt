@@ -7,7 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,7 +35,6 @@ import com.clex.android.ui.components.SectionLabel
 import com.clex.android.ui.components.SectionTitle
 import com.clex.android.ui.effects.MeshGradientBackground
 import com.clex.android.ui.effects.ParticleField
-import com.clex.android.ui.theme.CxBorders
 import com.clex.android.ui.theme.CxSpacing
 import com.clex.android.ui.theme.CxTheme
 import com.clex.android.ui.theme.CxTypography
