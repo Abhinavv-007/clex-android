@@ -31,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.clex.android.ui.anim.RevealFromBottom
 import com.clex.android.ui.anim.rememberEntryVisibility
@@ -45,7 +44,6 @@ import com.clex.android.ui.components.HeroTitle
 import com.clex.android.ui.components.MonoText
 import com.clex.android.ui.effects.MeshGradientBackground
 import com.clex.android.ui.effects.ParticleField
-import com.clex.android.ui.theme.CxBorders
 import com.clex.android.ui.theme.CxColors
 import com.clex.android.ui.theme.CxSpacing
 import com.clex.android.ui.theme.CxTheme

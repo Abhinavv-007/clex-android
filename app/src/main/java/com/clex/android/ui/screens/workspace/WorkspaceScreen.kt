@@ -34,8 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
@@ -56,7 +54,6 @@ import com.clex.android.data.transfer.NearbyInvite
 import com.clex.android.data.transfer.NearbyRole
 import com.clex.android.data.transfer.NearbySession
 import com.clex.android.data.transfer.NearbySessionState
-import com.clex.android.data.transfer.ResolvedTransferRoute
 import com.clex.android.data.transfer.SendRoute
 import com.clex.android.data.transfer.SharesheetHelper
 import com.clex.android.data.transfer.TransferMethod

@@ -9,7 +9,6 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.clex.android.ui.anim.CxTransitions
 import com.clex.android.ui.screens.chain.ChainScreen
 import com.clex.android.ui.screens.help.HelpFaqScreen

@@ -16,7 +16,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.BlendMode
 import com.clex.android.ui.anim.*
 import com.clex.android.ui.components.*
 import com.clex.android.ui.effects.MeshGradientBackground
