@@ -142,6 +142,9 @@ dependencies {
     // android.* (hashing, MIME categorisation, JSON encode/decode, etc.).
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation("androidx.test:core-ktx:1.5.0")
+    testImplementation("androidx.test.ext:junit:1.1.5")
 
     // Instrumented tests for code that needs android.* APIs (Vault
     // crypto uses android.util.Base64, etc.). Run via
