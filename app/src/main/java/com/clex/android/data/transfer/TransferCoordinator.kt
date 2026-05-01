@@ -5,6 +5,7 @@ import com.clex.android.BuildConfig
 import com.clex.android.data.ChainFileMeta
 import com.clex.android.data.ChainIdentityStore
 import com.clex.android.data.ClexChainApi
+import com.clex.android.data.displayName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -497,17 +498,3 @@ private fun android.net.Uri.toWorkspaceFile(context: Context): WorkspaceSelected
     )
 }
 
-private fun android.net.Uri.displayName(context: Context): String? {
-    if (scheme != "content") return path?.substringAfterLast('/')
-
-    val cursor = context.contentResolver.query(this, null, null, null, null)
-    cursor?.use {
-        if (it.moveToFirst()) {
-            val index = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-            if (index >= 0) {
-                return it.getString(index)
-            }
-        }
-    }
-    return path?.substringAfterLast('/')
-}
