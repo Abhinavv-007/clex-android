@@ -36,6 +36,10 @@ class TransferStateMachine {
                 diagnosticCode = null,
                 currentFile = null,
                 receivedFiles = emptyList(),
+                progress = 0,
+                bytesSent = 0L,
+                bytesTotal = 0L,
+                speedBps = 0L,
             )
         }
     }
