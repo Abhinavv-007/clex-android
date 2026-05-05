@@ -247,5 +247,5 @@ See [INTEGRATION.md](INTEGRATION.md).
 <div align="center">
   <sub>🤖 Built by <a href="https://abhnv.in"><b>Abhinav Raj</b></a> · siblings: <a href="https://github.com/Abhinavv-007/clex">clex</a> · <a href="https://github.com/Abhinavv-007/clex-ios">clex-ios</a> · <a href="https://github.com/Abhinavv-007/clex-ai">clex-ai</a>.</sub>
   <br/>
-  <a href="https://abhnv.in">Portfolio</a> · <a href="https://www.linkedin.com/in/abhnv07/">LinkedIn</a> · <a href="https://x.com/Abhnv007">X</a> · <a href="https://www.instagram.com/abhinavv.007/">Instagram</a>
+  <a href="https://abhnv.in">Portfolio</a> · <a href="https://www.linkedin.com/in/abhnv07/">LinkedIn</a> · <a href="https://x.com/Abhnv8">X</a> · <a href="https://www.instagram.com/abhinavv.007/">Instagram</a>
 </div>
