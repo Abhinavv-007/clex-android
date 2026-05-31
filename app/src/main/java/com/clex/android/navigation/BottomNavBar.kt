@@ -14,6 +14,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -61,8 +63,30 @@ fun CxBottomNavBar(
                 .border(1.dp, colors.borderSubtle, RoundedCornerShape(28.dp))
                 .padding(horizontal = 10.dp, vertical = CxSpacing.sm)
                 .drawBehind {
-                    // Single sliding pill at the bottom of the row
+                    // v1.9.13 — soft accent glow ring under the active tab.
+                    // Sits behind the sliding pill so the selected tab feels
+                    // physically lit, like the web nav.
                     val itemWidth = size.width / tabCount
+                    val centerX = animatedIndex * itemWidth + itemWidth / 2f
+                    val centerY = size.height / 2f
+                    val glowR = (itemWidth / 1.2f).coerceAtLeast(48.dp.toPx())
+                    if (glowR > 0f) {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    colors.accent.copy(alpha = if (colors.isDark) 0.22f else 0.18f),
+                                    colors.accent.copy(alpha = 0.04f),
+                                    Color.Transparent,
+                                ),
+                                center = Offset(centerX, centerY),
+                                radius = glowR,
+                            ),
+                            radius = glowR,
+                            center = Offset(centerX, centerY),
+                        )
+                    }
+
+                    // Single sliding pill at the bottom of the row
                     val pillWidth = 28.dp.toPx()
                     val pillHeight = 3.dp.toPx()
                     val x = animatedIndex * itemWidth + (itemWidth - pillWidth) / 2f

@@ -7,10 +7,24 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.12"
-    const val versionCode = 202
+    const val versionName = "1.9.13"
+    const val versionCode = 203
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.9.13",
+            releasedOn = "31 May 2026",
+            notes = listOf(
+                "Cinematic motion pass synced with the web design language: Vault note cards, Chain hero stats, and the Chain ledger now stagger in at 80ms-per-row with an 18.dp slide-from-below.",
+                "Chain hero headline parallaxes at 0.55x scroll while the live-session and chains stat counters get an idle parallaxFloat so the page feels alive at rest.",
+                "Workspace transfer headlines (CONNECTING / COMPLETE / FAILED) now sweep through the accent gradient over 800ms EaseInOut, and a morphing 48dp → 120dp Share FAB appears once files are loaded with the SHARE label fading in.",
+                "BrutalistButton emits a 16dp neonLime radial press-glow that pulses 200ms then fades; BrutalistCard now carries a subtle 2200ms diagonal shimmer at 18° / 8% alpha so the brand layer reads consistently across cards.",
+                "Accordion content slides in on a panel spring and the chevron rotates with a bounce spring instead of a flat tween.",
+                "Settings hero now slides up from 24.dp on entry while the gear glyph scales 0.8 → 1.0; the bottom navigation gets a soft accent glow ring under the active tab and tab swaps use a scaleIn 0.95 + fadeIn 200ms / scaleOut 1.05 + fadeOut 160ms transition.",
+                "Splash logo carries a gentle 1.0 ↔ 1.02 breathe cycle once it has stamped in, and Vault note long-press fires a dragTick haptic plus a 0.98 → 1.0 scale pulse before opening the actions sheet.",
+                "(no behavioural changes — transfer state machine, BLE/WebRTC, and the Vault crypto pipeline are untouched)"
+            )
+        ),
         ChangelogEntry(
             version = "1.9.12",
             releasedOn = "28 Apr 2026",

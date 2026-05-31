@@ -21,6 +21,28 @@ Expected artifacts after release build:
 - `app/build/outputs/apk/release/`
 - `app/build/outputs/bundle/release/`
 
+## v1.9.13
+
+Public artifact names:
+
+- `Clex-1.9.13-universal.apk`
+- `Clex-1.9.13.aab`
+
+Release notes:
+
+- Cinematic motion pass synced with the web design language. Vault note list (`VaultScreen.NoteCard`) staggers in via `RevealFromBottom` at `350ms + index * 80ms` with an 18.dp slide; Chain hero stat cards now wrap in `parallaxFloat` (4.dp amplitude, 4600ms, staggered delay) and the public-ledger rows in `ChainScreen.PublicLedger` stagger at `index * 80ms` with an 18.dp slide for parity with the web table-row entry.
+- Chain hero headline parallaxes at `0.55 * scrollState.value` (capped at 56.dp lift) so the title floats slightly faster than the rest of the hero card as the page scrolls upward.
+- Workspace state headlines morph through `CxPremium.accentGradient` over 800ms EaseInOut with a `Reverse` repeat — `ConnectingPanel` and `WorkspaceCompletePanel` use the new `lerpAccentGradient` helper, and `WorkspaceErrorPanel` cross-fades the failure glyph between `CxColors.error` and `CxColors.accentSecondary`.
+- New `MorphingShareFab` in the Send tab: 48.dp accent circle while files are queued, animates to a 120.dp pill via `animateDpAsState` + spring with the `SHARE` label fading in via `animateFloatAsState` once at least one file is ready.
+- `BrutalistButton` now emits a 16dp `CxPremium.neonLime` radial press-glow at 0.30 alpha (pulses for 200ms, fades over 320ms) using `animateFloatAsState` on the press interaction.
+- `BrutalistCard` carries a subtle premium shimmer (`premiumShimmer`, 2200ms, 18°, white at 0.08 alpha) so the brand layer reads consistently across cards in Vault, Chain, Workspace, and Settings.
+- `BrutalistAccordion` content now slides in via `slideInVertically + expandVertically` on a panel spring; the chevron rotates with `CxSpringSpecs.bounce()` instead of a flat tween.
+- Settings hero (`SettingsScreen`) slides up from 24.dp via a 400ms panel spring on first entry while the gear glyph scales 0.8 → 1.0 with a bouncy spring.
+- Bottom navigation (`CxBottomNavBar`) now draws a soft accent glow ring under the active tab (radial gradient, 22%/4%/transparent stops). Tab swaps in `AppNavHost` use the new `CxTransitions.tabEnter` (scaleIn 0.95 + fadeIn 200ms) and `CxTransitions.tabExit` (scaleOut 1.05 + fadeOut 160ms) instead of pure cross-fade.
+- `SplashScreen` logo carries a 1.0 ↔ 1.02 breathe cycle (2400ms `infiniteRepeatable` sine) once `phase2Logo` settles, layered on top of the existing stamp scale animation.
+- Vault note long-press now emits `CxHaptics.dragTick` and pulses the card from 0.98 → 1.0 via a press spring before opening the actions sheet.
+- (no behavioural changes — transfer state machine, BLE/WebRTC signaling, and the Vault crypto pipeline are untouched)
+
 ## v1.9.12
 
 Public artifact names:

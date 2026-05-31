@@ -341,4 +341,17 @@ object CxTransitions {
         targetOffsetX = { it / 6 },
         animationSpec = tween(exitDuration, easing = EaseInCubic)
     ) + fadeOut(animationSpec = tween(exitDuration))
+
+    // ── Bottom-nav tab swap (v1.9.13) ──
+    // Slight scale-in + fade for the entering tab, slight scale-out + fade
+    // for the exiting tab. Synced with the web frontend's bottom-nav swap.
+    val tabEnter = scaleIn(
+        initialScale = 0.95f,
+        animationSpec = tween(200, easing = EaseOutCubic)
+    ) + fadeIn(animationSpec = tween(200))
+
+    val tabExit = scaleOut(
+        targetScale = 1.05f,
+        animationSpec = tween(160, easing = EaseInCubic)
+    ) + fadeOut(animationSpec = tween(160))
 }

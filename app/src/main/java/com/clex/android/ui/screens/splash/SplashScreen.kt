@@ -82,6 +82,18 @@ fun SplashScreen(onComplete: () -> Unit) {
         label = "logoAlpha"
     )
 
+    // v1.9.13 — gentle breathe cycle once the logo is settled. Scale drifts
+    // 1.00 ↔ 1.02 over a 2.4s cycle so the brand mark feels alive without
+    // distracting from the rest of the splash beats.
+    val breatheTransition = rememberInfiniteTransition(label = "logoBreathe")
+    val breatheRaw by breatheTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = (2f * PI).toFloat(),
+        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing)),
+        label = "logoBreathePhase"
+    )
+    val breatheScale = if (phase2Logo) 1f + 0.01f * sin(breatheRaw) else 1f
+
     // ── Center glow bloom ──
     val glowRadius by animateFloatAsState(
         targetValue = if (phase1Glow) 1f else 0f,
@@ -244,7 +256,7 @@ fun SplashScreen(onComplete: () -> Unit) {
                 contentDescription = "Clex logo",
                 modifier = Modifier
                     .size(190.dp)
-                    .scale(logoScale)
+                    .scale(logoScale * breatheScale)
                     .alpha(logoAlpha),
             )
 

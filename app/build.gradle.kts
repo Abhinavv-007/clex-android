@@ -20,8 +20,8 @@ android {
         applicationId = "com.clex.android"
         minSdk = 26
         targetSdk = 34
-        versionCode = 202
-        versionName = "1.9.12"
+        versionCode = 203
+        versionName = "1.9.13"
 
         vectorDrawables {
             useSupportLibrary = true

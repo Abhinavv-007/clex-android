@@ -15,6 +15,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.clex.android.ui.anim.CxSpringSpecs
+import com.clex.android.ui.effects.premiumShimmer
 import com.clex.android.ui.theme.*
 
 // ═══════════════════════════════════════════════════
@@ -73,6 +74,13 @@ fun BrutalistCard(
                 }
                 .border(CxBorders.thick, borderColor)
                 .background(colors.bgCard)
+                // v1.9.13 — diagonal premium shimmer sweep, kept subtle so it
+                // reads as a brand layer rather than a loading state.
+                .premiumShimmer(
+                    color = Color.White.copy(alpha = 0.08f),
+                    durationMs = 2200,
+                    angleDeg = 18f,
+                )
                 .then(
                     if (onClick != null) {
                         Modifier.clickable(

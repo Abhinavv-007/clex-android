@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.draw.clip
@@ -344,7 +345,10 @@ private fun NotesTab(visible: Boolean) {
             Spacer(Modifier.height(CxSpacing.lg))
 
             notes.forEachIndexed { index, note ->
-                RevealFromBottom(visible = visible, delayMs = 350L + index * CxAnim.staggerDelay) {
+                // v1.9.13 — match the web vault stagger: 80ms per index with
+                // an 18.dp slide-from-below. Falls back to RevealFromBottom's
+                // panel spring (260ms) for a snappy spring entrance.
+                RevealFromBottom(visible = visible, delayMs = 350L + index * 80L) {
                     NoteCard(
                         note = note,
                         onOpen = {
@@ -507,18 +511,40 @@ private fun NoteCard(
     onDelete: () -> Unit,
 ) {
     val colors = CxTheme.colors
+    val hapticView = rememberHapticView()
     var showMenu by remember { mutableStateOf(false) }
+    // v1.9.13 — long-press now fires a dragTick haptic and pulses the card
+    // from 0.98 → 1.0 scale before the actions sheet opens, mirroring the
+    // web vault swipe affordance on the secret card.
+    var pressFeedback by remember { mutableStateOf(false) }
+    val pressScale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (pressFeedback) 0.98f else 1f,
+        animationSpec = androidx.compose.animation.core.spring(
+            stiffness = CxAnim.Springs.stiffnessPress,
+            dampingRatio = CxAnim.Springs.dampingPress,
+        ),
+        label = "noteCardPressScale",
+        finishedListener = { pressFeedback = false }
+    )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .background(colors.bgCard)
             .border(1.dp, colors.borderSubtle)
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onOpen,
-                onLongClick = { showMenu = true }
+                onLongClick = {
+                    CxHaptics.dragTick(hapticView)
+                    pressFeedback = true
+                    showMenu = true
+                }
             )
             .padding(CxSpacing.md)
     ) {

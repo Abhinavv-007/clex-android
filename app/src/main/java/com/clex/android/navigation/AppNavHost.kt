@@ -54,20 +54,24 @@ fun AppNavHost(
         navController = navController,
         startDestination = Screen.Splash.route,
         modifier = modifier,
+        // v1.9.13 — bottom-tab swaps now use CxTransitions.tabEnter/tabExit
+        // (scaleIn 0.95 + fadeIn 200ms / scaleOut 1.05 + fadeOut 160ms) so the
+        // active tab "lifts" into view instead of pure cross-fading. Push
+        // navigation still uses the existing horizontal slide.
         enterTransition = {
-            if (isTabSwitch()) fadeIn(tween(200))
+            if (isTabSwitch()) CxTransitions.tabEnter
             else CxTransitions.screenEnter
         },
         exitTransition = {
-            if (isTabSwitch()) fadeOut(tween(160))
+            if (isTabSwitch()) CxTransitions.tabExit
             else CxTransitions.screenExit
         },
         popEnterTransition = {
-            if (isTabSwitch()) fadeIn(tween(200))
+            if (isTabSwitch()) CxTransitions.tabEnter
             else CxTransitions.screenPopEnter
         },
         popExitTransition = {
-            if (isTabSwitch()) fadeOut(tween(160))
+            if (isTabSwitch()) CxTransitions.tabExit
             else CxTransitions.screenPopExit
         }
     ) {

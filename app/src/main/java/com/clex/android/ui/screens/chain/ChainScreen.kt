@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.clex.android.data.ChainSessionDetail
@@ -108,7 +110,8 @@ fun ChainScreen() {
             ChainHero(
                 stats = chainFeedState.stats,
                 visible = screenVisible,
-                baseDelay = 40L
+                baseDelay = 40L,
+                heroScrollPx = scrollState.value,
             )
             HowChainWorks(
                 visible = screenVisible,
@@ -189,9 +192,17 @@ private fun ChainTopBar() {
 private fun ChainHero(
     stats: ChainStats?,
     visible: Boolean,
-    baseDelay: Long
+    baseDelay: Long,
+    heroScrollPx: Int = 0,
 ) {
     val colors = CxTheme.colors
+    val density = LocalDensity.current
+    // v1.9.13 — translate the hero headline at 0.55x the scroll offset (web
+    // parity) so the title floats slightly faster than the rest of the card
+    // as the user pulls the page upward. Capped to 56.dp so it never lifts
+    // out of the layout entirely.
+    val maxLiftPx = with(density) { 56.dp.toPx() }
+    val heroLiftPx = -(heroScrollPx * 0.55f).coerceIn(0f, maxLiftPx)
 
     Column(
         modifier = Modifier
@@ -205,10 +216,16 @@ private fun ChainHero(
         }
         Spacer(Modifier.height(CxSpacing.md))
         StableRevealFromBottom(visible = visible, delayMs = baseDelay + 70L) {
-            HeroTitle(
-                text = "TRANSFER\nCHAIN",
-                fontSize = CxTypography.text5xl
-            )
+            Box(
+                modifier = Modifier.graphicsLayer {
+                    translationY = heroLiftPx
+                }
+            ) {
+                HeroTitle(
+                    text = "TRANSFER\nCHAIN",
+                    fontSize = CxTypography.text5xl
+                )
+            }
         }
         Spacer(Modifier.height(CxSpacing.md))
         StableRevealFromBottom(visible = visible, delayMs = baseDelay + 140L) {
@@ -239,13 +256,20 @@ private fun ChainHero(
                 ChainHeroStatCard(
                     label = "LIVE SESSIONS",
                     value = stats?.totalSessions ?: 0,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        // v1.9.13 — gentle parallax-float idle on the stat
+                        // numbers so they "breathe" while the screen is at
+                        // rest. Stagger via delayFrac.
+                        .parallaxFloat(amplitude = 4.dp, durationMs = 4600, delayFrac = 0.0f),
                     accent = colors.accent
                 )
                 ChainHeroStatCard(
                     label = "CHAINS",
                     value = stats?.totalChains ?: 0,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .parallaxFloat(amplitude = 4.dp, durationMs = 4600, delayFrac = 0.5f),
                     accent = CxColors.success
                 )
             }
@@ -750,7 +774,13 @@ private fun PublicLedger(
                 val displayedEntries = if (expanded) feedState.entries else feedState.entries.take(6)
 
                 displayedEntries.forEachIndexed { index, entry ->
-                    StableRevealFromBottom(visible = visible, delayMs = baseDelay + 180L + index * 55L) {
+                    // v1.9.13 — chain ledger now staggers at index * 80ms with
+                    // a 18.dp slide so each row pops in like the web table.
+                    StableRevealFromBottom(
+                        visible = visible,
+                        delayMs = baseDelay + 180L + index * 80L,
+                        initialOffsetY = 18,
+                    ) {
                         LedgerRow(entry, onClick = { onEntryClick(entry) })
                     }
                     if (index < displayedEntries.lastIndex) {

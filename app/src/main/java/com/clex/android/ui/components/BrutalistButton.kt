@@ -1,6 +1,8 @@
 package com.clex.android.ui.components
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
@@ -113,10 +116,48 @@ fun BrutalistButton(
         ButtonSize.LARGE -> CxBorders.thick
     }
 
+    // Press-glow (v1.9.13) — pulses a 16dp radial neonLime glow behind the
+    // button as the press fires, then fades out. Stays subtle on GHOST.
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.30f else 0f,
+        animationSpec = tween(durationMillis = if (isPressed) 200 else 320),
+        label = "buttonGlowAlpha"
+    )
+    val glowColor = when (variant) {
+        ButtonVariant.PRIMARY -> CxPremium.neonLime
+        ButtonVariant.SECONDARY -> colors.accent
+        ButtonVariant.GHOST -> colors.accent
+    }
+    val glowSpread = with(androidx.compose.ui.platform.LocalDensity.current) { 16.dp.toPx() }
+
     Box(
         modifier = modifier
             .offset(x = translateX, y = translateY)
             .drawBehind {
+                // Press glow — radial halo around the button. Note: `size`
+                // (the ButtonSize function param) shadows DrawScope.size in
+                // this lambda, so we read this.size explicitly.
+                if (glowAlpha > 0.001f) {
+                    val cw = this.size.width
+                    val ch = this.size.height
+                    val cx = cw / 2f
+                    val cy = ch / 2f
+                    val r = (maxOf(cw, ch) / 2f) + glowSpread
+                    if (r > 0f) {
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    glowColor.copy(alpha = glowAlpha),
+                                    Color.Transparent,
+                                ),
+                                center = Offset(cx, cy),
+                                radius = r,
+                            ),
+                            topLeft = Offset(-glowSpread, -glowSpread),
+                            size = Size(cw + glowSpread * 2f, ch + glowSpread * 2f),
+                        )
+                    }
+                }
                 // Hard shadow behind
                 if (variant != ButtonVariant.GHOST) {
                     drawRect(

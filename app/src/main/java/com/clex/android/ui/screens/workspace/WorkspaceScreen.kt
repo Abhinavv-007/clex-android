@@ -587,6 +587,17 @@ private fun LiveSendTab(
                 )
 
                 Spacer(Modifier.height(CxSpacing.xl))
+                // v1.9.13 — morphing share FAB. While files are queued, a 48dp
+                // accent circle sits centered above the primary CTA. Once at
+                // least one file is ready it morphs into a 120dp pill with
+                // "SHARE" fading in (animateDpAsState width + animateFloatAsState
+                // text alpha). Click triggers the same start-transfer flow.
+                MorphingShareFab(
+                    filesReady = files.isNotEmpty(),
+                    onClick = { controller.startTransfer() },
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+                Spacer(Modifier.height(CxSpacing.lg))
                 BrutalistButton(
                     text = if (sendRoute == SendRoute.LOCAL) "START LOCAL TRANSFER →" else "START DIRECT TRANSFER →",
                     onClick = { controller.startTransfer() },
@@ -1801,23 +1812,121 @@ private fun WaitingForSenderPanel(
     }
 }
 
+// v1.9.13 — Morphing Share FAB. Idle: 48dp accent circle. When files are
+// ready: animates to a 120dp pill, fades in the "SHARE" label, and stays
+// tap-target friendly throughout the morph.
+@Composable
+private fun MorphingShareFab(
+    filesReady: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = CxTheme.colors
+    val width by animateDpAsState(
+        targetValue = if (filesReady) 120.dp else 48.dp,
+        animationSpec = spring(
+            stiffness = CxAnim.Springs.stiffnessPanel,
+            dampingRatio = CxAnim.Springs.dampingPanel,
+        ),
+        label = "fabWidth",
+    )
+    val height by animateDpAsState(
+        targetValue = 48.dp,
+        animationSpec = spring(
+            stiffness = CxAnim.Springs.stiffnessPanel,
+            dampingRatio = CxAnim.Springs.dampingPanel,
+        ),
+        label = "fabHeight",
+    )
+    val labelAlpha by animateFloatAsState(
+        targetValue = if (filesReady) 1f else 0f,
+        animationSpec = tween(220, easing = EaseInOut),
+        label = "fabLabelAlpha",
+    )
+    Box(
+        modifier = modifier
+            .width(width)
+            .height(height)
+            .clip(RoundedCornerShape(48.dp))
+            .background(colors.accent)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (labelAlpha > 0.01f) {
+            MonoText(
+                text = "SHARE",
+                fontSize = CxTypography.textSm,
+                fontWeight = CxTypography.weightBold,
+                color = CxColors.pureBlack,
+                letterSpacing = CxTypography.textXs * 0.15,
+                modifier = Modifier.alpha(labelAlpha),
+            )
+        }
+        if (labelAlpha < 0.99f) {
+            MonoText(
+                text = "→",
+                fontSize = CxTypography.textXl,
+                color = CxColors.pureBlack,
+                modifier = Modifier.alpha(1f - labelAlpha),
+            )
+        }
+    }
+}
+
 @Composable
 private fun ConnectingPanel(
     title: String,
     subtitle: String,
 ) {
+    val colors = CxTheme.colors
+    // v1.9.13 — state gradient morph: the "ESTABLISHING CONNECTION" headline
+    // animates between accent gradient stops over 800ms EaseInOut, syncing
+    // with the equivalent web headline color sweep.
+    val infiniteTransition = rememberInfiniteTransition(label = "connectingMorph")
+    val phase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "connectingMorphPhase",
+    )
+    val morphColor = lerpAccentGradient(phase, colors.accent)
+
     MicroAppPanel(title = "Connection") {
         MonoText(
             text = title,
             fontSize = CxTypography.textBase,
             fontWeight = CxTypography.weightBold,
-            color = CxTheme.colors.accent
+            color = morphColor
         )
         Spacer(Modifier.height(CxSpacing.md))
         BodyText(text = subtitle)
         Spacer(Modifier.height(CxSpacing.lg))
         BrutalistProgressBar(progress = 0.55f, segments = 12)
     }
+}
+
+// v1.9.13 — Picks a color along CxPremium.accentGradient (lime → mint → cyan)
+// so transfer-state headlines can sweep through the same palette as the web
+// build's gradient text.
+private fun lerpAccentGradient(t: Float, fallback: Color): Color {
+    val stops = CxPremium.accentGradient
+    if (stops.isEmpty()) return fallback
+    if (stops.size == 1) return stops[0]
+    val clamped = t.coerceIn(0f, 1f)
+    val segCount = stops.size - 1
+    val pos = clamped * segCount
+    val idx = pos.toInt().coerceAtMost(segCount - 1)
+    val frac = pos - idx
+    val a = stops[idx]
+    val b = stops[idx + 1]
+    return androidx.compose.ui.graphics.lerp(a, b, frac)
 }
 
 @Composable
@@ -1888,13 +1997,28 @@ private fun WorkspaceCompletePanel(
     onSecondary: () -> Unit,
 ) {
     val colors = CxTheme.colors
+    // v1.9.13 — COMPLETE headline shimmers across the accent gradient stops
+    // over 800ms EaseInOut so the moment the transfer lands the title sweeps
+    // through lime → mint → cyan, matching the web success state.
+    val transition = rememberInfiniteTransition(label = "completeMorph")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "completeMorphPhase",
+    )
+    val morphColor = lerpAccentGradient(phase, CxColors.success)
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AnimatedCheckmark()
         Spacer(Modifier.height(CxSpacing.lg))
-        SectionTitle(text = headline, color = CxColors.success)
+        SectionTitle(text = headline, color = morphColor)
         Spacer(Modifier.height(CxSpacing.md))
         BodyText(text = summary, textAlign = TextAlign.Center)
         Spacer(Modifier.height(CxSpacing.xl))
@@ -1935,6 +2059,25 @@ private fun WorkspaceErrorPanel(
     onRetry: () -> Unit,
     onReset: () -> Unit,
 ) {
+    // v1.9.13 — FAILED morph: glyph and headline pulse between error and
+    // accentSecondary so the failure state catches the eye without losing
+    // the brand's "this is still Clex" tone.
+    val transition = rememberInfiniteTransition(label = "failedMorph")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "failedMorphPhase",
+    )
+    val errorColor = androidx.compose.ui.graphics.lerp(
+        CxColors.error,
+        CxColors.accentSecondary,
+        phase,
+    )
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -1942,7 +2085,7 @@ private fun WorkspaceErrorPanel(
         MonoText(
             text = "✕",
             fontSize = CxTypography.text6xl,
-            color = CxColors.error
+            color = errorColor
         )
         Spacer(Modifier.height(CxSpacing.md))
         BodyText(
