@@ -35,15 +35,29 @@
 
 ---
 
-## ✦ Current Release — `1.9.12`
+## ✦ Current Release — `1.9.13`
 
 | | |
 |---|---|
 | Package | `com.clex.android` |
 | Min SDK | `26` (Android 8.0) |
 | Target SDK | `34` |
-| Universal APK | `dist/Clex-1.9.12-universal.apk` |
-| Play bundle | `dist/Clex-1.9.12.aab` |
+| Version code | `203` |
+| Universal APK | `dist/Clex-1.9.13-universal.apk` |
+| Play bundle | `dist/Clex-1.9.13.aab` |
+
+> **What's new in 1.9.13 — Cinematic UI refresh**
+> Pure motion + design language polish aligned with the clex.in web direction. Zero behaviour changes to transfer / BLE / WebRTC paths.
+>
+> - **Vault** — staggered note-list entry (`RevealFromBottom`, 80ms stride), long-press haptic + 0.98→1.0 press scale on `NoteCard`
+> - **Chain** — hero headline graphicsLayer parallax (0.55× scroll), `parallaxFloat` on stat cards, public-ledger row stagger
+> - **Workspace** — transfer-state headline gradient morph (lime → mint → cyan, 800ms `EaseInOut` reverse), FAILED glyph cross-fade, **morphing share FAB** (48dp circle → 120dp pill)
+> - **Components** — `BrutalistButton` press glow (16dp neonLime halo, 0.30α), `BrutalistCard` premium shimmer (2200ms / 18°), `Accordion` spring expand
+> - **Navigation** — new `CxTransitions.tabEnter / tabExit` (scale + fade) wired into `AppNavHost`, bottom-nav active glow ring
+> - **Splash** — gentle 1.0↔1.02 sine breathe over 2400ms layered on the existing stamp scale
+> - **Settings** — title slides up 24.dp with 400ms panel spring on entry, gear glyph scales 0.8→1.0 with bounce spring
+>
+> Release: <https://github.com/Abhinavv-007/clex-android/releases/tag/v1.9.13>
 
 > The repo is the Android build only. It opens directly in Android Studio and does not depend on source code from the rest of the original monorepo at build time.
 
@@ -90,6 +104,7 @@
 
 | | |
 |---|---|
+| `1.9.13` | **Cinematic UI refresh** — Vault stagger + haptic, Chain hero parallax, Workspace gradient morph + morphing share FAB, BrutalistButton press glow, BrutalistCard shimmer, Accordion spring expand, bottom-nav glow ring, splash breathe, tab-enter/exit transitions |
 | `1.9.12` | GitHub Actions CI (compile + test + lint + assemble), JVM unit-test scaffolding, BuildConfig extraction for signaling URL + BLE manufacturer ID |
 | `1.9.11` | Vault tab Crossfade → AnimatedContent · tab + success/failure haptics for Secret + Drive flows |
 | `1.9.10` | Workspace tab Crossfade → AnimatedContent · full haptic feedback pass |
@@ -163,8 +178,8 @@ If Android blocks the install, enable installation from unknown sources for the 
 
 | Use case | Artifact |
 | --- | --- |
-| Direct install / share | `Clex-1.9.12-universal.apk` |
-| Play Store upload | `Clex-1.9.12.aab` |
+| Direct install / share | `Clex-1.9.13-universal.apk` |
+| Play Store upload | `Clex-1.9.13.aab` |
 
 See [RELEASES.md](RELEASES.md) for artifact names and signing notes.
 
