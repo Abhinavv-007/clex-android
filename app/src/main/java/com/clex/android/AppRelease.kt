@@ -7,10 +7,18 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.10.1"
-    const val versionCode = 211
+    const val versionName = "1.10.2"
+    const val versionCode = 212
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.10.2",
+            releasedOn = "06 Jun 2026",
+            notes = listOf(
+                "CI now attaches release APKs to GitHub releases automatically on every `v*` tag push — no more manual artifact downloads when the network drops.",
+                "(no app behaviour change vs 1.10.1 — same liquid-glass shell, same coachmarks, same mesh-gradient floor)"
+            )
+        ),
         ChangelogEntry(
             version = "1.10.1",
             releasedOn = "05 Jun 2026",
