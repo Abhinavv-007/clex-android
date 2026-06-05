@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import com.clex.android.R
 
 // ═══════════════════════════════════════════════════
 //  CLEX — DESIGN TOKENS
@@ -117,16 +118,20 @@ object CxColors {
 // ── TYPOGRAPHY TOKENS ──────────────────────────────
 
 object CxTypography {
-    // Font families.
-    // - fontDisplay = Geist (system sans-serif fallback locally; downloadable
-    //   font provider can be wired later in res/font/ + values/ when needed).
-    // - fontBody = same family for unified voice (matches website).
-    // - fontMono = JetBrains Mono fallback (system monospace) for codes/keys.
-    // - fontCursive = Pacifico fallback (serif italic stand-in).
-    val fontDisplay = FontFamily.SansSerif
-    val fontBody = FontFamily.SansSerif
+    // Real font families bundled in res/font/.
+    // Geist powers display + body. Pacifico powers cursive accent words.
+    // JetBrains Mono fallback (system) for codes/keys.
+    val fontDisplay = FontFamily(
+        Font(R.font.geist_regular, FontWeight.W400),
+        Font(R.font.geist_medium, FontWeight.W500),
+        Font(R.font.geist_semibold, FontWeight.W600),
+        Font(R.font.geist_bold, FontWeight.W700),
+        Font(R.font.geist_extrabold, FontWeight.W800),
+        Font(R.font.geist_black, FontWeight.W900),
+    )
+    val fontBody = fontDisplay
     val fontMono = FontFamily.Monospace
-    val fontCursive = FontFamily.Cursive
+    val fontCursive = FontFamily(Font(R.font.pacifico_regular, FontWeight.W400))
 
     // Font sizes (mobile-optimized scale)
     val textXs = 11.sp
@@ -358,4 +363,53 @@ object CxMotion {
     const val shimmerMs = 2200
     const val parallaxSpringStiffness = 220f
     const val tiltMaxDeg = 14f
+}
+
+// ═══════════════════════════════════════════════════
+//  LIQUID GLASS TOKENS — iOS 18 / visionOS-inspired
+//  Stacked translucent glass with inner highlight,
+//  outer ink stroke, frost tint, mesh gradient floor.
+// ═══════════════════════════════════════════════════
+
+object CxGlass {
+    // Frost tint — light/dark glass body
+    val frostLight = Color(0xCCFAF5E8)         // 80% cream
+    val frostLightSoft = Color(0xB3FAF5E8)
+    val frostDark = Color(0xCC15131E)
+    val frostDarkSoft = Color(0xB315131E)
+
+    // Inner highlight (top-edge specular)
+    val innerHighlightLight = Color(0xCCFFFFFF)
+    val innerHighlightDark = Color(0x66FFFFFF)
+
+    // Inner shadow (bottom inset)
+    val innerShadowLight = Color(0x140E0E0D)
+    val innerShadowDark = Color(0x33000000)
+
+    // Outer ring stroke (1.5dp ink)
+    val ringStrokeLight = Color(0xFF0E0E0D)
+    val ringStrokeDark = Color(0x80FFFFFF)
+
+    // Drop shadow color
+    val dropShadowLight = Color(0x330E0E0D)
+    val dropShadowDark = Color(0x66000000)
+
+    // Mesh gradient stops (animated background floor)
+    val meshLavender = Color(0xFFC4B5FD)
+    val meshPeach = Color(0xFFFFD0B3)
+    val meshMint = Color(0xFFB8E9C4)
+    val meshBlue = Color(0xFFB5DCFF)
+    val meshPink = Color(0xFFFFD1DC)
+    val meshYellow = Color(0xFFFFE27A)
+
+    // Blur radii (RenderEffect API 31+)
+    const val blurSm = 12f
+    const val blurMd = 28f
+    const val blurLg = 44f
+    const val blurXl = 60f
+
+    // Stroke widths
+    val ringThin = 1.dp
+    val ringMed = 1.5.dp
+    val ringBold = 2.dp
 }

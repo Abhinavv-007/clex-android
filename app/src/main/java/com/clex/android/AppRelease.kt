@@ -7,10 +7,33 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.9.13"
-    const val versionCode = 203
+    const val versionName = "1.10.0"
+    const val versionCode = 210
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.10.0",
+            releasedOn = "05 Jun 2026",
+            notes = listOf(
+                "Major redesign — full liquid-glass cinematic frontend matching clex.in. Splash, Onboarding, Home, and bottom navigation rebuilt as translucent glass surfaces with mesh-gradient floors.",
+                "Floating pill bottom nav: 999dp pill, frosted glass body, ink ring, active tab gets a bright cyan-on-cream tinted backdrop. Mixed-case labels (Home / Vault / Chain / Settings).",
+                "Adaptive launcher icon now switches between the dark and light Clex marks based on the device theme — light wallpaper gets the dark logo, dark wallpaper gets the light logo. Themed monochrome icon for Android 13+.",
+                "Real fonts shipped: Geist (display + body, 400-900 weights) and Pacifico (cursive accents). No more system-font fallback.",
+                "Cursive accent words now render with a true brand gradient brush (Pacifico, lavender → peach → mint).",
+                "Onboarding rewrite — 5 swipeable glass panels with kicker chips, dot pager, gradient pill CTA, mesh-gradient backdrop.",
+                "Home — cinematic hero card with bento grid (Workspace / Vault / Chain) and a mascot help panel.",
+                "Pacifico-tagged splash with logo bloom, brand gradient bloom, and ring burst handoff.",
+                "(no behavioural changes — transfer state machine, BLE/WebRTC, Vault crypto, signaling untouched)",
+            )
+        ),
+        ChangelogEntry(
+            version = "1.9.15",
+            releasedOn = "05 Jun 2026",
+            notes = listOf(
+                "Cinematic component sync — TextComponents, MicroAppPanel.SectionLabel, PremiumComponents.NeonTag/GlowButton and BottomNavBar all rebuilt to match the web kicker chips, gradient pill CTAs and Geist mixed-case headings.",
+                "(intermediate release — superseded by v1.10.0 full redesign)",
+            )
+        ),
         ChangelogEntry(
             version = "1.9.13",
             releasedOn = "31 May 2026",

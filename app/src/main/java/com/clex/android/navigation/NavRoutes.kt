@@ -19,14 +19,13 @@ sealed class Screen(val route: String) {
     data object Developer : Screen("developer")
 }
 
-// Bottom nav items — 4 primary destinations
 enum class BottomNavItem(
     val route: String,
     val label: String,
-    val icon: String   // Emoji/text icon — Neo-Brutalist, no Material icons
+    val icon: String
 ) {
-    HOME(Screen.Workspace.route, "HOME", "⌂"),
-    VAULT(Screen.Vault.route, "VAULT", "◈"),
-    CHAIN(Screen.Chain.route, "CHAIN", "⟐"),
-    SETTINGS(Screen.Settings.route, "SETTINGS", "⊙");
+    HOME(Screen.Workspace.route, "Home", "⌂"),
+    VAULT(Screen.Vault.route, "Vault", "◈"),
+    CHAIN(Screen.Chain.route, "Chain", "⟐"),
+    SETTINGS(Screen.Settings.route, "Settings", "⊙");
 }

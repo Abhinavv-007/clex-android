@@ -1,556 +1,296 @@
 package com.clex.android.ui.screens.onboarding
 
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.clex.android.ui.anim.RevealFromBottom
-import com.clex.android.ui.anim.rememberEntryVisibility
-import com.clex.android.ui.components.BodyText
-import com.clex.android.ui.components.BrandLogoImage
-import com.clex.android.ui.components.BrutalistBadge
-import com.clex.android.ui.components.BrutalistButton
-import com.clex.android.ui.components.ButtonSize
-import com.clex.android.ui.components.ButtonVariant
-import com.clex.android.ui.components.HeroTitle
-import com.clex.android.ui.components.MonoText
-import com.clex.android.ui.effects.MeshGradientBackground
-import com.clex.android.ui.effects.ParticleField
+import com.clex.android.ui.components.CursiveAccent
+import com.clex.android.ui.components.KickerChip
+import com.clex.android.ui.components.LiquidGlassCard
+import com.clex.android.ui.components.LiquidMeshBackground
+import com.clex.android.ui.components.LiquidPillButton
 import com.clex.android.ui.theme.CxColors
+import com.clex.android.ui.theme.CxRadius
 import com.clex.android.ui.theme.CxSpacing
 import com.clex.android.ui.theme.CxTheme
 import com.clex.android.ui.theme.CxTypography
 import kotlinx.coroutines.launch
 
-private data class OnboardingCard(
+private data class GlassSlide(
+    val kicker: String,
     val title: String,
+    val accent: String,
     val body: String,
+    val bullets: List<Pair<String, String>>,
+    val cta: String,
 )
 
-private data class OnboardingSlide(
-    val step: String,
-    val title: String,
-    val subtitle: String,
-    val badges: List<String>,
-    val accent: Color,
-    val cards: List<OnboardingCard>,
-)
-
-private val onboardingSlides = listOf(
-    OnboardingSlide(
-        step = "01",
-        title = "DROP FILES\nINSTANTLY",
-        subtitle = "Bring files into Clex from the picker or clipboard. Nothing uploads first. The workspace starts on-device.",
-        badges = listOf("FILE PICKER", "CLIPBOARD", "ANY FORMAT"),
-        accent = CxColors.accent,
-        cards = listOf(
-            OnboardingCard("PICK", "Open the file picker and load what you need."),
-            OnboardingCard("HOLD", "Files stay local while you prepare them."),
-            OnboardingCard("QUEUE", "Start transfer only when you are ready."),
-        )
+private val glassSlides = listOf(
+    GlassSlide(
+        kicker = "01 · drop",
+        title = "Bring files in",
+        accent = "instantly.",
+        body = "Pull files from the picker or clipboard. Nothing leaves your phone until you say so.",
+        bullets = listOf(
+            "Picker" to "Files, photos, archives — any format.",
+            "Clipboard" to "Links and snippets land in seconds.",
+            "On-device" to "Workspace starts before any upload.",
+        ),
+        cta = "Continue",
     ),
-    OnboardingSlide(
-        step = "02",
-        title = "PREPARE\nWITHOUT LEAVING",
-        subtitle = "Compress, merge, convert, and chain actions inside the same flow instead of bouncing across tools.",
-        badges = listOf("COMPRESS", "MERGE", "CONVERT", "ZIP"),
-        accent = CxColors.accentTertiary,
-        cards = listOf(
-            OnboardingCard("IMAGE", "Shrink images before sending."),
-            OnboardingCard("PDF", "Merge or split documents in one pass."),
-            OnboardingCard("CHAIN", "Route one action straight into the next."),
-        )
+    GlassSlide(
+        kicker = "02 · prepare",
+        title = "Polish without",
+        accent = "leaving the app.",
+        body = "Compress, merge, convert, chain — every step lives in one flow instead of jumping across tools.",
+        bullets = listOf(
+            "Image" to "Shrink, crop, convert.",
+            "PDF" to "Merge, split, watermark.",
+            "Chain" to "Route one action into the next.",
+        ),
+        cta = "Continue",
     ),
-    OnboardingSlide(
-        step = "03",
-        title = "SHARE BY THE\nBEST ROUTE",
-        subtitle = "Clex tries the best delivery path first: direct peer-to-peer, then local network, with cloud backup only when needed.",
-        badges = listOf("DIRECT", "LOCAL", "FALLBACK"),
-        accent = CxColors.success,
-        cards = listOf(
-            OnboardingCard("DIRECT", "Fastest path when both devices are live."),
-            OnboardingCard("LOCAL", "Use same-network transfer when available."),
-            OnboardingCard("BACKUP", "Cloud fallback only if the direct path fails."),
-        )
-    )
+    GlassSlide(
+        kicker = "03 · share",
+        title = "Send by the",
+        accent = "best route.",
+        body = "Clex tries direct peer-to-peer first, then local network, then cloud as a fallback. Whichever lands fastest.",
+        bullets = listOf(
+            "Direct" to "Fastest when both devices are live.",
+            "Local" to "Same Wi-Fi handoff when available.",
+            "Cloud" to "Failsafe with end-to-end encryption.",
+        ),
+        cta = "Continue",
+    ),
+    GlassSlide(
+        kicker = "04 · vault",
+        title = "Hide secrets",
+        accent = "behind a vault.",
+        body = "Notes, keys, recovery codes — everything you tuck away is encrypted on-device with a passphrase only you know.",
+        bullets = listOf(
+            "Encrypted" to "AES-256 with PBKDF2.",
+            "Local" to "Cipher never leaves the device.",
+            "Stealth" to "Disguise screen for casual snoops.",
+        ),
+        cta = "Continue",
+    ),
+    GlassSlide(
+        kicker = "05 · ready",
+        title = "Welcome to",
+        accent = "the calm flow.",
+        body = "You're set. Hop in, drop a file, and feel how fast prepare → share gets when nothing fights you.",
+        bullets = listOf(
+            "Tip" to "Pull down anywhere to drop new files.",
+            "Tip" to "Long-press any tile to peek the chain.",
+            "Tip" to "Visit Settings to flip light or dark.",
+        ),
+        cta = "Open Clex",
+    ),
 )
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(onComplete: () -> Unit) {
     val colors = CxTheme.colors
-    val pagerState = rememberPagerState(pageCount = { onboardingSlides.size })
+    val pagerState = rememberPagerState(pageCount = { glassSlides.size })
     val scope = rememberCoroutineScope()
-    val isLastPage = pagerState.currentPage == onboardingSlides.lastIndex
-    val activeSlide = onboardingSlides[pagerState.currentPage]
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bgPrimary)
+            .background(if (colors.isDark) CxColors.bgPrimary else CxColors.cream),
     ) {
-        MeshGradientBackground(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(if (colors.isDark) 0.15f else 0.08f),
-            accentStrength = 0.08f
-        )
-        ParticleField(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(if (colors.isDark) 0.10f else 0.04f),
-            particleCount = 18,
-            connectDistance = 90f,
-            color = activeSlide.accent
-        )
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize()
-        ) { page ->
-            OnboardingSlidePage(
-                slide = onboardingSlides[page],
-                isActive = pagerState.currentPage == page
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = CxSpacing.screenHorizontal, vertical = CxSpacing.md),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(CxSpacing.sm)
-            ) {
-                BrandLogoImage(size = 28.dp)
-                MonoText(
-                    text = "CLEX",
-                    fontSize = CxTypography.textBase,
-                    fontWeight = CxTypography.weightBlack,
-                    color = colors.textPrimary,
-                    letterSpacing = CxTypography.textXs * 0.18
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(colors.bgCard)
-                    .border(1.dp, colors.borderSubtle, RoundedCornerShape(999.dp))
-                    .clickable(onClick = onComplete)
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                MonoText(
-                    text = "SKIP",
-                    fontSize = CxTypography.textXs,
-                    color = colors.textSecondary,
-                    letterSpacing = CxTypography.textXs * 0.14
-                )
-            }
-        }
+        LiquidMeshBackground(modifier = Modifier.matchParentSize())
 
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
+                .fillMaxSize()
+                .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = CxSpacing.screenHorizontal)
-                .padding(bottom = CxSpacing.xl),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 18.dp, vertical = 16.dp),
         ) {
+            // Top bar — skip
             Row(
-                horizontalArrangement = Arrangement.spacedBy(CxSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                onboardingSlides.forEachIndexed { index, slide ->
+                KickerChip(text = "Tour")
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(if (colors.isDark) Color(0x33FFFFFF) else Color(0x14000000))
+                        .clickable { onComplete() }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                ) {
+                    Text(
+                        text = "Skip",
+                        fontSize = CxTypography.textSm,
+                        fontFamily = CxTypography.fontDisplay,
+                        fontWeight = CxTypography.weightSemibold,
+                        color = colors.textSecondary,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                pageSpacing = 12.dp,
+            ) { page ->
+                val slide = glassSlides[page]
+                val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).let {
+                    kotlin.math.abs(it)
+                }
+                val cardScale by animateFloatAsState(
+                    targetValue = 1f - 0.05f * pageOffset.coerceIn(0f, 1f),
+                    animationSpec = tween(0),
+                    label = "cardScale",
+                )
+
+                LiquidGlassCard(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = cardScale
+                            scaleY = cardScale
+                            alpha = 1f - 0.3f * pageOffset.coerceIn(0f, 1f)
+                        },
+                    cornerRadius = CxRadius.lg,
+                    padding = 26.dp,
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        KickerChip(text = slide.kicker)
+                        Spacer(Modifier.height(20.dp))
+
+                        Text(
+                            text = slide.title,
+                            fontSize = CxTypography.text4xl,
+                            fontFamily = CxTypography.fontDisplay,
+                            fontWeight = CxTypography.weightExtrabold,
+                            color = colors.textPrimary,
+                            lineHeight = CxTypography.text4xl * 1.1,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        CursiveAccent(
+                            text = slide.accent,
+                            fontSize = CxTypography.text4xl,
+                            modifier = Modifier.align(Alignment.Start),
+                        )
+
+                        Spacer(Modifier.height(18.dp))
+
+                        Text(
+                            text = slide.body,
+                            fontSize = CxTypography.textBase,
+                            fontFamily = CxTypography.fontBody,
+                            fontWeight = CxTypography.weightMedium,
+                            color = colors.textSecondary,
+                            lineHeight = CxTypography.textBase * 1.55,
+                        )
+
+                        Spacer(Modifier.height(24.dp))
+
+                        slide.bullets.forEach { (k, v) ->
+                            Row(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(top = 6.dp)
+                                        .size(8.dp)
+                                        .background(
+                                            androidx.compose.ui.graphics.Brush.linearGradient(
+                                                listOf(CxColors.lavender, CxColors.peach2)
+                                            ),
+                                            shape = CircleShape,
+                                        )
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = k,
+                                        fontSize = CxTypography.textSm,
+                                        fontFamily = CxTypography.fontDisplay,
+                                        fontWeight = CxTypography.weightExtrabold,
+                                        color = colors.textPrimary,
+                                        letterSpacing = CxTypography.textSm * 0.04,
+                                    )
+                                    Text(
+                                        text = v,
+                                        fontSize = CxTypography.textSm,
+                                        fontFamily = CxTypography.fontBody,
+                                        fontWeight = CxTypography.weightMedium,
+                                        color = colors.textTertiary,
+                                        lineHeight = CxTypography.textSm * 1.5,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Dot pager
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(glassSlides.size) { i ->
+                    val active = i == pagerState.currentPage
                     Box(
                         modifier = Modifier
-                            .width(if (pagerState.currentPage == index) 30.dp else 12.dp)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(99.dp))
+                            .padding(horizontal = 4.dp)
+                            .height(8.dp)
+                            .width(if (active) 24.dp else 8.dp)
+                            .clip(RoundedCornerShape(999.dp))
                             .background(
-                                if (pagerState.currentPage == index) slide.accent
-                                else colors.borderSubtle
+                                if (active) CxColors.lavender
+                                else if (colors.isDark) Color(0x33FFFFFF) else Color(0x33000000)
                             )
                     )
                 }
             }
 
-            Spacer(Modifier.height(CxSpacing.lg))
+            Spacer(Modifier.height(14.dp))
 
-            if (isLastPage) {
-                BrutalistButton(
-                    text = "OPEN WORKSPACE →",
-                    onClick = onComplete,
-                    variant = ButtonVariant.PRIMARY,
-                    size = ButtonSize.LARGE,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            } else {
-                BrutalistButton(
-                    text = "NEXT STEP →",
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
-                    },
-                    variant = ButtonVariant.PRIMARY,
-                    size = ButtonSize.LARGE,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun OnboardingSlidePage(
-    slide: OnboardingSlide,
-    isActive: Boolean
-) {
-    val colors = CxTheme.colors
-    val visible = rememberEntryVisibility("${slide.step}-$isActive")
-    val scrollState = rememberScrollState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = CxSpacing.screenHorizontal)
-            .padding(top = 96.dp, bottom = 220.dp)
-    ) {
-        RevealFromBottom(visible = visible, delayMs = 0) {
-            OnboardingStepChip(step = slide.step, accent = slide.accent)
-        }
-
-        Spacer(Modifier.height(CxSpacing.xl))
-
-        RevealFromBottom(visible = visible, delayMs = 80) {
-            OnboardingGraphic(slide = slide)
-        }
-
-        Spacer(Modifier.height(CxSpacing.xl))
-
-        RevealFromBottom(visible = visible, delayMs = 160) {
-            HeroTitle(
-                text = slide.title,
-                color = colors.textPrimary,
-                fontSize = CxTypography.text5xl
-            )
-        }
-
-        Spacer(Modifier.height(CxSpacing.md))
-
-        RevealFromBottom(visible = visible, delayMs = 240) {
-            BodyText(
-                text = slide.subtitle,
-                color = colors.textSecondary,
-                fontSize = CxTypography.textBase
-            )
-        }
-
-        Spacer(Modifier.height(CxSpacing.lg))
-
-        RevealFromBottom(visible = visible, delayMs = 320) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(CxSpacing.sm),
-                verticalArrangement = Arrangement.spacedBy(CxSpacing.sm)
-            ) {
-                slide.badges.forEach { badge ->
-                    BrutalistBadge(
-                        text = badge,
-                        accentColor = slide.accent
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(CxSpacing.xl))
-
-        slide.cards.forEachIndexed { index, card ->
-            RevealFromBottom(visible = visible, delayMs = 400L + index * 90L) {
-                OnboardingInfoCard(
-                    title = card.title,
-                    body = card.body,
-                    accent = slide.accent
-                )
-            }
-            if (index < slide.cards.lastIndex) {
-                Spacer(Modifier.height(CxSpacing.sm))
-            }
-        }
-
-        Spacer(Modifier.height(CxSpacing.xl))
-    }
-}
-
-@Composable
-private fun OnboardingStepChip(
-    step: String,
-    accent: Color
-) {
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(accent.copy(alpha = 0.14f))
-            .border(1.dp, accent.copy(alpha = 0.7f), RoundedCornerShape(999.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(CxSpacing.sm)
-    ) {
-        MonoText(
-            text = step,
-            fontSize = CxTypography.textSm,
-            fontWeight = CxTypography.weightBlack,
-            color = accent
-        )
-        MonoText(
-            text = "SETUP",
-            fontSize = CxTypography.textXs,
-            color = accent,
-            letterSpacing = CxTypography.textXs * 0.14
-        )
-    }
-}
-
-@Composable
-private fun OnboardingInfoCard(
-    title: String,
-    body: String,
-    accent: Color
-) {
-    val colors = CxTheme.colors
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(colors.bgCard)
-            .border(1.dp, colors.borderSubtle, RoundedCornerShape(20.dp))
-            .padding(CxSpacing.md)
-    ) {
-        MonoText(
-            text = title,
-            fontSize = CxTypography.textSm,
-            fontWeight = CxTypography.weightBold,
-            color = colors.textPrimary
-        )
-        Spacer(Modifier.height(CxSpacing.xs))
-        BodyText(
-            text = body,
-            fontSize = CxTypography.textSm,
-            color = colors.textSecondary
-        )
-        Spacer(Modifier.height(CxSpacing.sm))
-        Box(
-            modifier = Modifier
-                .width(44.dp)
-                .height(3.dp)
-                .clip(RoundedCornerShape(99.dp))
-                .background(accent)
-        )
-    }
-}
-
-@Composable
-private fun OnboardingGraphic(slide: OnboardingSlide) {
-    when (slide.step) {
-        "01" -> DropGraphic(accent = slide.accent)
-        "02" -> PrepareGraphic(accent = slide.accent)
-        else -> ShareGraphic(accent = slide.accent)
-    }
-}
-
-@Composable
-private fun DropGraphic(accent: Color) {
-    val colors = CxTheme.colors
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(colors.bgSecondary)
-            .border(1.dp, colors.borderSubtle, RoundedCornerShape(24.dp))
-            .padding(CxSpacing.lg),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        MonoText(
-            text = "↓",
-            fontSize = CxTypography.text3xl,
-            color = accent
-        )
-        Spacer(Modifier.height(CxSpacing.md))
-        Row(horizontalArrangement = Arrangement.spacedBy(CxSpacing.sm)) {
-            repeat(3) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(colors.bgCard)
-                        .border(
-                            1.dp,
-                            if (index == 1) accent.copy(alpha = 0.75f) else colors.borderSubtle,
-                            RoundedCornerShape(18.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    MonoText(
-                        text = listOf("PDF", "IMG", "DOC")[index],
-                        fontSize = CxTypography.textSm,
-                        color = if (index == 1) accent else colors.textSecondary
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PrepareGraphic(accent: Color) {
-    val colors = CxTheme.colors
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(colors.bgSecondary)
-            .border(1.dp, colors.borderSubtle, RoundedCornerShape(24.dp))
-            .padding(CxSpacing.lg)
-    ) {
-        listOf("COMPRESS", "CONVERT", "ZIP") .forEachIndexed { index, label ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(accent.copy(alpha = if (index == 1) 0.18f else 0.10f))
-                        .border(1.dp, accent.copy(alpha = 0.7f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    MonoText(
-                        text = String.format("%02d", index + 1),
-                        fontSize = CxTypography.textXs,
-                        color = accent
-                    )
-                }
-                Spacer(Modifier.width(CxSpacing.md))
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(colors.bgCard)
-                        .border(1.dp, colors.borderSubtle, RoundedCornerShape(16.dp))
-                        .padding(horizontal = CxSpacing.md, vertical = 12.dp)
-                ) {
-                    MonoText(
-                        text = label,
-                        fontSize = CxTypography.textSm,
-                        fontWeight = CxTypography.weightBold,
-                        color = colors.textPrimary
-                    )
-                }
-            }
-            if (index < 2) {
-                Spacer(Modifier.height(CxSpacing.sm))
-                MonoText(
-                    text = "↓",
-                    fontSize = CxTypography.textLg,
-                    color = accent,
-                    modifier = Modifier.padding(start = 12.dp)
-                )
-                Spacer(Modifier.height(CxSpacing.sm))
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShareGraphic(accent: Color) {
-    val colors = CxTheme.colors
-    val routes = listOf(
-        Triple("DIRECT", "BEST", accent),
-        Triple("LOCAL", "READY", CxColors.accentTertiary),
-        Triple("BACKUP", "FALLBACK", CxColors.warning)
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(colors.bgSecondary)
-            .border(1.dp, colors.borderSubtle, RoundedCornerShape(24.dp))
-            .padding(CxSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(CxSpacing.sm)
-    ) {
-        routes.forEach { (title, state, color) ->
-            Row(
+            // CTA
+            val isLast = pagerState.currentPage == glassSlides.lastIndex
+            LiquidPillButton(
+                text = glassSlides[pagerState.currentPage].cta,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(colors.bgCard)
-                    .border(1.dp, colors.borderSubtle, RoundedCornerShape(16.dp))
-                    .padding(horizontal = CxSpacing.md, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(CxSpacing.sm)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(RoundedCornerShape(99.dp))
-                            .background(color)
-                    )
-                    MonoText(
-                        text = title,
-                        fontSize = CxTypography.textSm,
-                        fontWeight = CxTypography.weightBold,
-                        color = colors.textPrimary
-                    )
-                }
-                MonoText(
-                    text = state,
-                    fontSize = CxTypography.textXs,
-                    color = color
-                )
-            }
+                    .clickable {
+                        if (isLast) onComplete()
+                        else scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                    },
+            )
+            Spacer(Modifier.height(8.dp))
         }
     }
 }
