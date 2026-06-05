@@ -17,82 +17,112 @@ import androidx.compose.ui.unit.Dp
 // ── COLOR TOKENS ──────────────────────────────────
 
 object CxColors {
-    // Dark mode (default)
+    // Dark mode (matches clex.in dark theme)
     val bgPrimary = Color(0xFF0A0A0A)
-    val bgSecondary = Color(0xFF111111)
-    val bgTertiary = Color(0xFF1A1A1A)
-    val bgCard = Color(0xFF141414)
-    val bgCardHover = Color(0xFF1E1E1E)
-    val bgElevated = Color(0xFF1A1A1A)
+    val bgSecondary = Color(0xFF14121D)
+    val bgTertiary = Color(0xFF1A1822)
+    val bgCard = Color(0xFF15131E)
+    val bgCardHover = Color(0xFF1F1B2D)
+    val bgElevated = Color(0xFF1A1822)
     val bgInput = Color(0xFF111111)
 
-    val textPrimary = Color(0xFFF0F0E8)
-    val textSecondary = Color(0xFF999999)
-    val textTertiary = Color(0xFF666666)
+    val textPrimary = Color(0xFFF4EEE0)
+    val textSecondary = Color(0xFFCFC6B8)
+    val textTertiary = Color(0xFF8A8478)
     val textInverse = Color(0xFF0A0A0A)
 
-    val accent = Color(0xFFC8FF00)          // Clex Yellow — the brand
-    val accentHover = Color(0xFFD4FF33)
-    val accentMuted = Color(0x26C8FF00)     // 15% opacity
-    val accentSecondary = Color(0xFFFF3D00)  // Red-orange
-    val accentSecondaryHover = Color(0xFFFF5722)
-    val accentTertiary = Color(0xFF00D4FF)   // Cyan
+    // Pastel-on-dark accents (synced with clex.in)
+    val accent = Color(0xFFC4B5FD)            // lavender (primary)
+    val accentHover = Color(0xFFD3BBFF)
+    val accentMuted = Color(0x33C4B5FD)
+    val accentSecondary = Color(0xFFFF8A1F)   // peach/orange
+    val accentSecondaryHover = Color(0xFFFFA655)
+    val accentTertiary = Color(0xFF7EDC8B)    // mint
 
-    val borderColor = Color(0xFF2A2A2A)
-    val borderBold = Color(0xFFF0F0E8)
-    val borderSubtle = Color(0xFF1E1E1E)
+    val borderColor = Color(0x33FFFFFF)
+    val borderBold = Color(0xFFF4EEE0)
+    val borderSubtle = Color(0x14FFFFFF)
 
     val shadowColor = Color(0xFF000000)
 
-    val surfaceOverlay = Color(0x99000000)  // 60% black
+    val surfaceOverlay = Color(0x99000000)
 
-    // Light mode
-    val lightBgPrimary = Color(0xFFF5F0E8)
-    val lightBgSecondary = Color(0xFFEBE5D9)
-    val lightBgTertiary = Color(0xFFE0D9CC)
+    // Light mode (matches clex.in cream palette)
+    val lightBgPrimary = Color(0xFFF6EFDF)
+    val lightBgSecondary = Color(0xFFEFE6CF)
+    val lightBgTertiary = Color(0xFFEBE2C9)
     val lightBgCard = Color(0xFFFFFFFF)
-    val lightBgCardHover = Color(0xFFFAFAF5)
+    val lightBgCardHover = Color(0xFFFFFAEB)
     val lightBgElevated = Color(0xFFFFFFFF)
-    val lightBgInput = Color(0xFFF5F0E8)
+    val lightBgInput = Color(0xFFFAF5E8)
 
-    val lightTextPrimary = Color(0xFF0A0A0A)
-    val lightTextSecondary = Color(0xFF555555)
-    val lightTextTertiary = Color(0xFF888888)
-    val lightTextInverse = Color(0xFFF0F0E8)
+    val lightTextPrimary = Color(0xFF0E0E0D)
+    val lightTextSecondary = Color(0xFF4A4642)
+    val lightTextTertiary = Color(0xFF7A7670)
+    val lightTextInverse = Color(0xFFFAF5E8)
 
-    val lightBorderColor = Color(0xFFD0C9BA)
-    val lightBorderBold = Color(0xFF0A0A0A)
-    val lightBorderSubtle = Color(0xFFE0D9CC)
+    val lightBorderColor = Color(0xFFE3D9C0)
+    val lightBorderBold = Color(0xFF0E0E0D)
+    val lightBorderSubtle = Color(0xFFEBE2C9)
 
-    val lightShadowColor = Color(0xFF0A0A0A)
+    val lightShadowColor = Color(0xFF0E0E0D)
 
-    // Feature-specific accent colors (from features page)
-    val toolCyan = Color(0xFF22D3EE)
-    val toolPurple = Color(0xFF9B7FFF)
-    val toolAmber = Color(0xFFFFAA00)
-    val toolGreen = Color(0xFF00E570)
-    val toolRed = Color(0xFFFF4466)
+    // Brand pastel palette
+    val cream      = Color(0xFFF6EFDF)
+    val creamSoft  = Color(0xFFFAF5E8)
+    val creamDeep  = Color(0xFFEFE6CF)
+    val lavender   = Color(0xFFC4B5FD)
+    val lavender2  = Color(0xFFB9A8FB)
+    val lavender3  = Color(0xFFA08AFF)
+    val peach      = Color(0xFFFFD0B3)
+    val peach2     = Color(0xFFFFBF99)
+    val peach3     = Color(0xFFFF9D6E)
+    val mint       = Color(0xFFB8E9C4)
+    val mint2      = Color(0xFF8FDBA1)
+    val pink       = Color(0xFFFFD1DC)
+    val yellow     = Color(0xFFFFE27A)
+    val yellow2    = Color(0xFFFFD13A)
+    val blue       = Color(0xFFB5DCFF)
+    val ink        = Color(0xFF0E0E0D)
+    val inkSoft    = Color(0xFF2A2A28)
+
+    // Cursive gradient stops (Pacifico accent words)
+    val cursiveStart    = Color(0xFF8B5CF6)
+    val cursiveMid1     = Color(0xFFD85F8B)
+    val cursiveMid2     = Color(0xFFFF8A1F)
+    val cursiveEnd      = Color(0xFFFFD46A)
+    val cursiveStartDark = Color(0xFFD3BBFF)
+    val cursiveMidDark   = Color(0xFFFFB9D6)
+    val cursiveEndDark   = Color(0xFFFFD198)
+
+    // Feature-specific accent colors
+    val toolCyan = Color(0xFF25B6E8)
+    val toolPurple = Color(0xFF8B5CF6)
+    val toolAmber = Color(0xFFFF8A1F)
+    val toolGreen = Color(0xFF34C759)
+    val toolRed = Color(0xFFFF5F57)
 
     // Status
-    val success = Color(0xFF00E570)
-    val error = Color(0xFFFF3D00)
-    val warning = Color(0xFFFFAA00)
-    val info = Color(0xFF00D4FF)
+    val success = Color(0xFF34C759)
+    val error = Color(0xFFFF5F57)
+    val warning = Color(0xFFFFB13A)
+    val info = Color(0xFF25B6E8)
 
     // Pure
     val black = Color(0xFF000000)
     val white = Color(0xFFFFFFFF)
-    val pureBlack = Color(0xFF0A0A0A)
+    val pureBlack = Color(0xFF0E0E0D)
 }
 
 // ── TYPOGRAPHY TOKENS ──────────────────────────────
 
 object CxTypography {
-    // We use system monospace + geometric sans as Neo-Brutalist demands
-    // Space Mono mapped to monospace system, Inter mapped to sans-serif
-    val fontDisplay = FontFamily.Monospace  // Headings — raw, technical
-    val fontBody = FontFamily.SansSerif     // Body — clean geometric
-    val fontMono = FontFamily.Monospace     // Code, labels, data
+    // System fallback. Real Google Fonts (Geist, Pacifico, JetBrains Mono) are
+    // wired through Google Fonts provider when needed; system stack stays as
+    // a safe baseline for compileDebugKotlin without network at build time.
+    val fontDisplay = FontFamily.SansSerif
+    val fontBody = FontFamily.SansSerif
+    val fontMono = FontFamily.Monospace
 
     // Font sizes (mobile-optimized scale)
     val textXs = 11.sp
