@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.clex.android.ui.anim.CxSpringSpecs
 import com.clex.android.ui.anim.borderDrawIn
@@ -142,15 +144,15 @@ fun SectionLabel(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
             .border(
-                width = 1.dp,
-                color = colors.accent.copy(alpha = if (colors.isDark) 0.35f else 0.55f),
+                width = 1.5.dp,
+                color = if (colors.isDark) colors.borderColor else colors.borderBold,
                 shape = RoundedCornerShape(999.dp)
             )
             .background(
-                if (colors.isDark) colors.bgCard.copy(alpha = 0.76f)
-                else colors.bgCard.copy(alpha = 0.92f)
+                if (colors.isDark) colors.bgCard.copy(alpha = 0.85f)
+                else CxColors.creamSoft
             )
-            .padding(horizontal = 14.dp, vertical = 9.dp),
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -158,16 +160,20 @@ fun SectionLabel(
             modifier = Modifier
                 .size(8.dp)
                 .background(
-                    colors.accent,
+                    Brush.linearGradient(
+                        listOf(CxColors.lavender, CxColors.accentSecondary)
+                    ),
                     shape = androidx.compose.foundation.shape.CircleShape
                 )
         )
         Spacer(Modifier.width(8.dp))
-        MonoText(
+        Text(
             text = text.uppercase(),
             fontSize = CxTypography.textXs,
-            color = colors.accent,
-            letterSpacing = CxTypography.textXs * 0.2
+            fontFamily = CxTypography.fontDisplay,
+            fontWeight = CxTypography.weightExtrabold,
+            letterSpacing = CxTypography.textXs * 0.14,
+            color = if (colors.isDark) colors.textPrimary else CxColors.ink
         )
     }
 }

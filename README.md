@@ -35,29 +35,29 @@
 
 ---
 
-## ✦ Current Release — `1.9.13`
+## ✦ Current Release — `1.9.14`
 
 | | |
 |---|---|
 | Package | `com.clex.android` |
 | Min SDK | `26` (Android 8.0) |
 | Target SDK | `34` |
-| Version code | `203` |
-| Universal APK | `dist/Clex-1.9.13-universal.apk` |
-| Play bundle | `dist/Clex-1.9.13.aab` |
+| Version code | `204` |
+| Universal APK | `dist/Clex-1.9.14-universal.apk` |
+| Play bundle | `dist/Clex-1.9.14.aab` |
 
-> **What's new in 1.9.13 — Cinematic UI refresh**
-> Pure motion + design language polish aligned with the clex.in web direction. Zero behaviour changes to transfer / BLE / WebRTC paths.
+> **What's new in 1.9.14 — Cinematic Sync**
+> Brand identity sync to the [clex.in](https://clex.in) cinematic redesign. UI tokens swap from acid-lime to a Creem-inspired pastel system that matches the website Vault, Workspace, Chain, and Clex Link sections.
 >
-> - **Vault** — staggered note-list entry (`RevealFromBottom`, 80ms stride), long-press haptic + 0.98→1.0 press scale on `NoteCard`
-> - **Chain** — hero headline graphicsLayer parallax (0.55× scroll), `parallaxFloat` on stat cards, public-ledger row stagger
-> - **Workspace** — transfer-state headline gradient morph (lime → mint → cyan, 800ms `EaseInOut` reverse), FAILED glyph cross-fade, **morphing share FAB** (48dp circle → 120dp pill)
-> - **Components** — `BrutalistButton` press glow (16dp neonLime halo, 0.30α), `BrutalistCard` premium shimmer (2200ms / 18°), `Accordion` spring expand
-> - **Navigation** — new `CxTransitions.tabEnter / tabExit` (scale + fade) wired into `AppNavHost`, bottom-nav active glow ring
-> - **Splash** — gentle 1.0↔1.02 sine breathe over 2400ms layered on the existing stamp scale
-> - **Settings** — title slides up 24.dp with 400ms panel spring on entry, gear glyph scales 0.8→1.0 with bounce spring
+> - **New brand palette** — lavender (`#C4B5FD`) primary, peach (`#FF8A1F`) secondary, mint (`#7EDC8B`) tertiary
+> - **Dark surfaces** — deep ink with subtle violet tinge (`#0A0A0A → #14121D → #1A1822`); pastel-on-dark accents
+> - **Light surfaces** — cream (`#F6EFDF`) base, deep accent text `#5B3FC0`, saturated cyan `#15A3D8`
+> - **Brand pastel set** — cream / lavender×3 / peach×3 / mint×2 / pink / yellow×2 / blue / ink for cards & sections matching website Creem-stack
+> - **Cursive gradient stops** — Pacifico-style accent stops (`#8B5CF6 → #D85F8B → #FF8A1F → #FFD46A`) for use across Compose
+> - **Launcher icon** — refreshed adaptive launcher (foreground from website logo, cream `#F6EFDF` background)
+> - **Status / accent semantics** — success `#34C759`, warning `#FFB13A`, info `#25B6E8`, error `#FF5F57` matching website token table
 >
-> Release: <https://github.com/Abhinavv-007/clex-android/releases/tag/v1.9.13>
+> Release: <https://github.com/Abhinavv-007/clex-android/releases/tag/v1.9.14>
 
 > The repo is the Android build only. It opens directly in Android Studio and does not depend on source code from the rest of the original monorepo at build time.
 
@@ -104,6 +104,7 @@
 
 | | |
 |---|---|
+| `1.9.14` | **Cinematic Sync** — token swap to clex.in pastel system (lavender / peach / mint), brand palette set, cursive gradient stops, refreshed launcher icon, cream-tinted adaptive background |
 | `1.9.13` | **Cinematic UI refresh** — Vault stagger + haptic, Chain hero parallax, Workspace gradient morph + morphing share FAB, BrutalistButton press glow, BrutalistCard shimmer, Accordion spring expand, bottom-nav glow ring, splash breathe, tab-enter/exit transitions |
 | `1.9.12` | GitHub Actions CI (compile + test + lint + assemble), JVM unit-test scaffolding, BuildConfig extraction for signaling URL + BLE manufacturer ID |
 | `1.9.11` | Vault tab Crossfade → AnimatedContent · tab + success/failure haptics for Secret + Drive flows |
@@ -178,8 +179,8 @@ If Android blocks the install, enable installation from unknown sources for the 
 
 | Use case | Artifact |
 | --- | --- |
-| Direct install / share | `Clex-1.9.13-universal.apk` |
-| Play Store upload | `Clex-1.9.13.aab` |
+| Direct install / share | `Clex-1.9.14-universal.apk` |
+| Play Store upload | `Clex-1.9.14.aab` |
 
 See [RELEASES.md](RELEASES.md) for artifact names and signing notes.
 

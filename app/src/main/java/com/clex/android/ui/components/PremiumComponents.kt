@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -115,7 +116,7 @@ fun GlowButton(
         initialValue = 0.55f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = EaseInOut),
+            animation = tween(2200, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glowPulse"
@@ -123,43 +124,53 @@ fun GlowButton(
 
     Box(
         modifier = modifier
-            .padding(10.dp)
+            .padding(8.dp)
             .drawBehind {
-                val pad = 14.dp.toPx() * glowPulse
+                // Hard offset shadow under the pill — matches pill-btn--primary
+                val r = 999f
+                drawRoundRect(
+                    color = if (colors.isDark) Color(0xFF000000) else CxColors.ink,
+                    topLeft = Offset(6.dp.toPx(), 6.dp.toPx()),
+                    size = size,
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r),
+                )
+                // Soft accent glow
+                val pad = 16.dp.toPx() * glowPulse
                 drawRect(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            accent.copy(alpha = 0.55f * glowPulse),
-                            accent.copy(alpha = 0f)
+                            CxColors.accentSecondary.copy(alpha = 0.35f * glowPulse),
+                            Color.Transparent
                         ),
                         center = Offset(size.width / 2f, size.height / 2f),
                         radius = (size.width + pad * 2f) / 1.4f
                     ),
                     topLeft = Offset(-pad, -pad),
                     size = Size(size.width + pad * 2f, size.height + pad * 2f),
-                    blendMode = BlendMode.Plus
                 )
             }
-            .clip(RoundedCornerShape(CxRadius.sm))
+            .clip(RoundedCornerShape(999.dp))
             .background(
                 Brush.linearGradient(
-                    colors = listOf(accent, accent.copy(alpha = 0.78f))
+                    colors = listOf(CxColors.lavender, CxColors.peach2, CxColors.mint)
                 )
             )
             .border(
-                width = CxBorders.medium,
-                color = colors.borderBold,
-                shape = RoundedCornerShape(CxRadius.sm)
+                width = 1.5.dp,
+                color = CxColors.ink,
+                shape = RoundedCornerShape(999.dp)
             )
             .elasticPress(onClick = onClick)
-            .padding(horizontal = 28.dp, vertical = 16.dp),
+            .padding(horizontal = 28.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
-        MonoText(
-            text = text.uppercase(),
+        Text(
+            text = text,
             fontSize = CxTypography.textBase,
-            color = CxColors.pureBlack,
-            fontWeight = CxTypography.weightBlack
+            color = CxColors.ink,
+            fontFamily = CxTypography.fontDisplay,
+            fontWeight = CxTypography.weightExtrabold,
+            letterSpacing = CxTypography.textBase * -0.01
         )
     }
 }
@@ -453,22 +464,38 @@ fun NeonTag(
     accent: Color = CxTheme.colors.accent,
     solid: Boolean = false
 ) {
-    Box(
+    val colors = CxTheme.colors
+    Row(
         modifier = modifier
-            .clip(RoundedCornerShape(CxRadius.full))
-            .background(if (solid) accent else accent.copy(alpha = 0.12f))
-            .border(
-                1.dp,
-                accent.copy(alpha = if (solid) 1f else 0.6f),
-                RoundedCornerShape(CxRadius.full)
+            .clip(RoundedCornerShape(999.dp))
+            .background(
+                if (colors.isDark) colors.bgCard.copy(alpha = 0.85f)
+                else CxColors.creamSoft
             )
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .border(
+                1.5.dp,
+                if (colors.isDark) colors.borderColor else colors.borderBold,
+                RoundedCornerShape(999.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        MonoText(
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(
+                    Brush.linearGradient(listOf(CxColors.lavender, CxColors.accentSecondary)),
+                    shape = androidx.compose.foundation.shape.CircleShape
+                )
+        )
+        Text(
             text = text.uppercase(),
             fontSize = CxTypography.textXs,
-            color = if (solid) CxColors.pureBlack else accent,
-            fontWeight = CxTypography.weightBold
+            fontFamily = CxTypography.fontDisplay,
+            fontWeight = CxTypography.weightExtrabold,
+            letterSpacing = CxTypography.textXs * 0.14,
+            color = if (colors.isDark) colors.textPrimary else CxColors.ink
         )
     }
 }

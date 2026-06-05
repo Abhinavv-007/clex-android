@@ -117,12 +117,16 @@ object CxColors {
 // ── TYPOGRAPHY TOKENS ──────────────────────────────
 
 object CxTypography {
-    // System fallback. Real Google Fonts (Geist, Pacifico, JetBrains Mono) are
-    // wired through Google Fonts provider when needed; system stack stays as
-    // a safe baseline for compileDebugKotlin without network at build time.
+    // Font families.
+    // - fontDisplay = Geist (system sans-serif fallback locally; downloadable
+    //   font provider can be wired later in res/font/ + values/ when needed).
+    // - fontBody = same family for unified voice (matches website).
+    // - fontMono = JetBrains Mono fallback (system monospace) for codes/keys.
+    // - fontCursive = Pacifico fallback (serif italic stand-in).
     val fontDisplay = FontFamily.SansSerif
     val fontBody = FontFamily.SansSerif
     val fontMono = FontFamily.Monospace
+    val fontCursive = FontFamily.Cursive
 
     // Font sizes (mobile-optimized scale)
     val textXs = 11.sp
