@@ -7,10 +7,20 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.10.0"
-    const val versionCode = 210
+    const val versionName = "1.10.1"
+    const val versionCode = 211
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.10.1",
+            releasedOn = "05 Jun 2026",
+            notes = listOf(
+                "First-launch tutorial coachmarks — 4 liquid-glass tooltips that introduce the new shell, floating nav, Workspace and Vault. Persisted in shared prefs so each tip shows once.",
+                "Settings rewritten as a pure liquid-glass shell — Geist headers, gradient theme knob, glass rows for Help / Privacy / Changelog / Developer.",
+                "Vault, Chain and Workspace now run on the same drifting mesh-gradient floor as Home, replacing the old aurora / particle-field backgrounds.",
+                "New CinematicScaffold composable used by Settings (and reusable elsewhere) — kicker chip, big Geist headline, optional Pacifico cursive accent, body line.",
+            )
+        ),
         ChangelogEntry(
             version = "1.10.0",
             releasedOn = "05 Jun 2026",

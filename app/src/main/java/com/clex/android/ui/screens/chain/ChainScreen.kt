@@ -85,20 +85,11 @@ fun ChainScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bgPrimary)
+            .background(if (colors.isDark) colors.bgPrimary else CxColors.cream)
     ) {
-        MeshGradientBackground(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0.14f),
-            accentStrength = 0.08f
-        )
-        ParticleField(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0.08f),
-            particleCount = 18,
-            connectDistance = 90f
+        com.clex.android.ui.components.LiquidMeshBackground(
+            modifier = Modifier.matchParentSize(),
+            intensity = 0.7f,
         )
 
         Column(

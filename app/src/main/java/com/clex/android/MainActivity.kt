@@ -271,5 +271,12 @@ fun ClexApp() {
                 )
             }
         }
+
+        // First-launch tutorial coachmarks — shown once after onboarding
+        if (hasSeenOnboarding && showBottomNav) {
+            com.clex.android.ui.components.CoachmarkOverlay(
+                steps = com.clex.android.ui.components.DefaultCoachmarks,
+            )
+        }
     }
 }

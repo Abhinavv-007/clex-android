@@ -90,19 +90,11 @@ fun VaultScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CxTheme.colors.bgPrimary)
+            .background(if (CxTheme.colors.isDark) CxColors.bgPrimary else CxColors.cream)
     ) {
-        AuroraBackground(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0.2f)
-        )
-        ParticleField(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0.12f),
-            particleCount = 22,
-            connectDistance = 110f
+        com.clex.android.ui.components.LiquidMeshBackground(
+            modifier = Modifier.matchParentSize(),
+            intensity = 0.7f,
         )
 
         Column(modifier = Modifier.fillMaxSize()) {

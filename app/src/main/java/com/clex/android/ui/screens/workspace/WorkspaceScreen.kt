@@ -208,20 +208,11 @@ fun WorkspaceScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bgPrimary)
+            .background(if (colors.isDark) colors.bgPrimary else CxColors.cream)
     ) {
-        MeshGradientBackground(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0.18f),
-            accentStrength = 0.1f
-        )
-        ParticleField(
-            modifier = Modifier
-                .matchParentSize()
-                .alpha(0.12f),
-            particleCount = 24,
-            connectDistance = 105f
+        com.clex.android.ui.components.LiquidMeshBackground(
+            modifier = Modifier.matchParentSize(),
+            intensity = 0.7f,
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
