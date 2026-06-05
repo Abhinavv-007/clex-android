@@ -270,39 +270,8 @@ fun KickerChip(
 }
 
 // ── CURSIVE ACCENT WORD ─────────────────────────────
-// Pacifico, brand gradient brush. Drop into headlines.
-
-@Composable
-fun CursiveAccent(
-    text: String,
-    modifier: Modifier = Modifier,
-    fontSize: androidx.compose.ui.unit.TextUnit = CxTypography.text4xl,
-) {
-    val colors = CxTheme.colors
-    val gradient = Brush.linearGradient(
-        colors = if (colors.isDark) listOf(
-            CxColors.cursiveStartDark,
-            CxColors.cursiveMidDark,
-            CxColors.cursiveEndDark,
-        ) else listOf(
-            CxColors.cursiveStart,
-            CxColors.cursiveMid1,
-            CxColors.cursiveMid2,
-            CxColors.cursiveEnd,
-        )
-    )
-    Text(
-        text = text,
-        fontSize = fontSize,
-        fontFamily = CxTypography.fontCursive,
-        fontWeight = CxTypography.weightRegular,
-        textAlign = TextAlign.Center,
-        modifier = modifier,
-        style = androidx.compose.ui.text.TextStyle(
-            brush = gradient,
-        )
-    )
-}
+// Use CursiveAccent() defined in TextComponents.kt — same family,
+// already wired with brand gradient brush.
 
 // ── GRADIENT PILL CTA ───────────────────────────────
 // Lavender→peach2→mint pill, ink stroke, hard offset shadow.
