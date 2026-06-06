@@ -119,17 +119,24 @@ object CxColors {
 
 object CxTypography {
     // Real font families bundled in res/font/.
-    // Geist powers display + body. Pacifico powers cursive accent words.
-    // JetBrains Mono fallback (system) for codes/keys.
+    // - fontDisplay: Bricolage Grotesque — distinctive geometric grotesque
+    //   with subtle warmth, picks up the website's character.
+    // - fontBody: Onest — neutral, very legible at small sizes.
+    // - fontCursive: Pacifico (brand cursive accent words).
+    // - fontMono: system Monospace fallback (codes, hashes, keys).
     val fontDisplay = FontFamily(
-        Font(R.font.geist_regular, FontWeight.W400),
-        Font(R.font.geist_medium, FontWeight.W500),
-        Font(R.font.geist_semibold, FontWeight.W600),
-        Font(R.font.geist_bold, FontWeight.W700),
-        Font(R.font.geist_extrabold, FontWeight.W800),
-        Font(R.font.geist_black, FontWeight.W900),
+        Font(R.font.bricolage_regular, FontWeight.W400),
+        Font(R.font.bricolage_medium, FontWeight.W500),
+        Font(R.font.bricolage_semibold, FontWeight.W600),
+        Font(R.font.bricolage_bold, FontWeight.W700),
+        Font(R.font.bricolage_extrabold, FontWeight.W800),
     )
-    val fontBody = fontDisplay
+    val fontBody = FontFamily(
+        Font(R.font.onest_regular, FontWeight.W400),
+        Font(R.font.onest_medium, FontWeight.W500),
+        Font(R.font.onest_semibold, FontWeight.W600),
+        Font(R.font.onest_bold, FontWeight.W700),
+    )
     val fontMono = FontFamily.Monospace
     val fontCursive = FontFamily(Font(R.font.pacifico_regular, FontWeight.W400))
 

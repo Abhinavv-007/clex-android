@@ -7,10 +7,22 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.10.2"
-    const val versionCode = 212
+    const val versionName = "1.11.0"
+    const val versionCode = 220
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.11.0",
+            releasedOn = "06 Jun 2026",
+            notes = listOf(
+                "Real launcher icon — every density (mdpi → xxxhdpi, square + round) now ships the new Clex mark on a cream background. Phones still showing the old icon will pick up the new one on this install.",
+                "Display font swapped from Geist to Bricolage Grotesque, body font set to Onest. Cursive accents stay on Pacifico. Both display and body now have their own real bundled TTFs.",
+                "Bottom navigation now uses hand-rolled vector icons (home, vault, chain, settings) at 22dp with rounded caps — replacing the brutalist text glyphs.",
+                "New CxIcon system covers home, vault (lock + shackle + keyhole), chain (interlocked links), settings (gear), menu, close, chevron, plus, share, moon, sun, lock, link, upload, download, sparkle, shield, cloud, note. Used across nav and the Cloud tab.",
+                "Vault → Cloud tab is now a clear 'coming soon' panel: Google Drive sync is not available in this build yet. The tab explains the AES-256 readiness and zero-telemetry posture instead of misleading sign-in flows.",
+                "Removed orphan Drive cloud-share helpers — the underlying Vault crypto, notes store, and on-device encryption pipeline are untouched.",
+            )
+        ),
         ChangelogEntry(
             version = "1.10.2",
             releasedOn = "06 Jun 2026",

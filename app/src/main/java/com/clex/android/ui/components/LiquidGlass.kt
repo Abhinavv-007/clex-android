@@ -435,6 +435,13 @@ data class NavTab(
     val icon: String,
 )
 
+private fun navIconFor(route: String?): CxIconType = when (route) {
+    "vault" -> CxIconType.VAULT
+    "chain" -> CxIconType.CHAIN
+    "settings" -> CxIconType.SETTINGS
+    else -> CxIconType.HOME
+}
+
 @Composable
 private fun LiquidNavTab(
     tab: NavTab,
@@ -445,7 +452,7 @@ private fun LiquidNavTab(
     val colors = CxTheme.colors
     val activeColor = if (colors.isDark) Color(0xFFB5DCFF) else Color(0xFF15A3D8)
     val idleColor = colors.textTertiary
-    val interaction = androidx.compose.runtime.remember { MutableInteractionSource() }
+    val interaction = remember { MutableInteractionSource() }
 
     Column(
         modifier = modifier
@@ -464,14 +471,13 @@ private fun LiquidNavTab(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = tab.icon,
-            fontSize = CxTypography.textXl,
+        CxIcon(
+            icon = navIconFor(tab.route),
+            size = 22.dp,
             color = if (selected) activeColor else idleColor,
-            fontFamily = CxTypography.fontDisplay,
-            fontWeight = FontWeight.SemiBold,
+            strokeWidth = if (selected) 2.dp else 1.6.dp,
         )
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(4.dp))
         Text(
             text = tab.label,
             fontSize = CxTypography.textXs,

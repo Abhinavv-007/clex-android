@@ -1494,37 +1494,10 @@ private data class SecretToggleItem(
 // ═══════════════════════════════════════════════════
 //  CLOUD SHARE TAB
 // ═══════════════════════════════════════════════════
-
 @Composable
 private fun CloudShareTab(visible: Boolean) {
     val colors = CxTheme.colors
     val scrollState = rememberScrollState()
-    val context = LocalContext.current
-    val uriHandler = LocalUriHandler.current
-    val scope = rememberCoroutineScope()
-    val driveAuthStore = remember(context) {
-        DriveAuthStore.get(context.applicationContext)
-    }
-    val driveSession by driveAuthStore.session.collectAsState()
-    var selectedFiles by remember { mutableStateOf<List<CloudDraftFile>>(emptyList()) }
-    var isUploading by remember { mutableStateOf(false) }
-    var uploadProgress by remember { mutableIntStateOf(0) }
-    var uploadError by remember { mutableStateOf<String?>(null) }
-    var uploadResult by remember { mutableStateOf<DriveUploadResult?>(null) }
-    val filePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments()
-    ) { uris ->
-        if (!uris.isNullOrEmpty()) {
-            val nextFiles = uris.mapNotNull { uri -> context.toCloudDraftFile(uri) }
-            if (nextFiles.isEmpty()) {
-                uploadError = "The selected files could not be prepared for Drive upload."
-            } else {
-                selectedFiles = (selectedFiles + nextFiles).distinctBy { it.uri.toString() }
-                uploadError = null
-            }
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1532,344 +1505,57 @@ private fun CloudShareTab(visible: Boolean) {
             .padding(horizontal = CxSpacing.screenHorizontal)
             .padding(top = CxSpacing.xl)
     ) {
-        RevealFromBottom(visible = visible, delayMs = 100) {
-            SectionLabel(text = "Cloud Share")
-        }
-        Spacer(Modifier.height(CxSpacing.md))
-        RevealFromBottom(visible = visible, delayMs = 200) {
-            BodyText(
-                text = "Upload files to your Google Drive. Generate timed share links. Auto-delete after 24 hours."
-            )
-        }
-
-        Spacer(Modifier.height(CxSpacing.xl))
-
-        // Google sign-in CTA
-        RevealFromBottom(visible = visible, delayMs = 300) {
-            BrutalistCard(accentBorder = true) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        MonoText(
-                            text = "GOOGLE DRIVE",
-                            fontSize = CxTypography.textBase,
-                            fontWeight = CxTypography.weightBold,
-                            color = colors.textPrimary
+        com.clex.android.ui.anim.RevealFromBottom(visible = visible, delayMs = 60) {
+            com.clex.android.ui.components.LiquidGlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadius = com.clex.android.ui.theme.CxRadius.lg,
+                padding = 26.dp,
+            ) {
+                Column {
+                    com.clex.android.ui.components.KickerChip(text = "cloud · coming soon")
+                    Spacer(Modifier.height(18.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        com.clex.android.ui.components.CxIcon(
+                            icon = com.clex.android.ui.components.CxIconType.CLOUD,
+                            size = 28.dp,
+                            color = if (colors.isDark) com.clex.android.ui.theme.CxColors.lavender else com.clex.android.ui.theme.CxColors.lavender3,
                         )
-                        Spacer(Modifier.height(CxSpacing.xs))
-                        MonoText(
-                            text = driveSession.toDriveStatusLine(),
-                            fontSize = CxTypography.textXs,
-                            color = if (driveSession == null) colors.textTertiary else CxColors.success
-                        )
-                    }
-                    if (driveSession == null) {
-                        BrutalistButton(
-                            text = "CONNECT",
-                            onClick = {
-                                context.startActivity(
-                                    Intent(
-                                        Intent.ACTION_VIEW,
-                                        Uri.parse(ClexDriveApi.buildAndroidGoogleAuthUrl())
-                                    )
-                                )
-                            },
-                            variant = ButtonVariant.PRIMARY,
-                            size = ButtonSize.SMALL
-                        )
-                    } else {
-                        BrutalistButton(
-                            text = "DISCONNECT",
-                            onClick = {
-                                driveAuthStore.clear()
-                                selectedFiles = emptyList()
-                                uploadResult = null
-                                uploadError = null
-                                uploadProgress = 0
-                            },
-                            variant = ButtonVariant.GHOST,
-                            size = ButtonSize.SMALL
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(CxSpacing.xl))
-
-        // Limits info
-        RevealFromBottom(visible = visible, delayMs = 400) {
-            Column {
-                MonoText(
-                    text = "LIMITS",
-                    fontSize = CxTypography.textXs,
-                    fontWeight = CxTypography.weightBold,
-                    color = colors.textTertiary,
-                    letterSpacing = CxTypography.textXs * 0.2
-                )
-                Spacer(Modifier.height(CxSpacing.md))
-
-                listOf(
-                    "MAX FILE SIZE" to "1 GB",
-                    "DAILY BUDGET" to "10 GB",
-                    "AUTO-DELETE" to "24 HOURS",
-                    "STORAGE" to "YOUR GOOGLE DRIVE"
-                ).forEach { (label, value) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = CxSpacing.xs),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        MonoText(text = label, fontSize = CxTypography.textXs, color = colors.textTertiary)
-                        MonoText(text = value, fontSize = CxTypography.textXs, color = colors.accent)
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(CxSpacing.xl))
-
-        when {
-            uploadResult != null -> {
-                val result = uploadResult!!
-                RevealFromBottom(visible = visible, delayMs = 500) {
-                    BrutalistCard(accentBorder = true) {
-                        CardTitle(
-                            text = "DRIVE LINK READY",
-                            fontSize = CxTypography.textBase,
-                            color = CxColors.success
-                        )
-                        Spacer(Modifier.height(CxSpacing.md))
-                        BodyText(
-                            text = result.folderName,
-                            fontSize = CxTypography.textSm,
-                            color = colors.textPrimary
-                        )
-                        Spacer(Modifier.height(CxSpacing.sm))
-                        BodyText(
-                            text = result.webViewLink,
-                            fontSize = CxTypography.textXs,
-                            color = colors.textSecondary
-                        )
-                        Spacer(Modifier.height(CxSpacing.lg))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(CxSpacing.md)
-                        ) {
-                            BrutalistButton(
-                                text = "OPEN",
-                                onClick = { uriHandler.openUri(result.webViewLink) },
-                                variant = ButtonVariant.PRIMARY,
-                                size = ButtonSize.MEDIUM,
-                                modifier = Modifier.weight(1f)
-                            )
-                            BrutalistButton(
-                                text = "COPY LINK",
-                                onClick = { copyToClipboard(context, "Drive link", result.webViewLink) },
-                                variant = ButtonVariant.SECONDARY,
-                                size = ButtonSize.MEDIUM,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Spacer(Modifier.height(CxSpacing.md))
-                        BrutalistButton(
-                            text = "UPLOAD MORE",
-                            onClick = {
-                                uploadResult = null
-                                selectedFiles = emptyList()
-                                uploadError = null
-                                uploadProgress = 0
-                            },
-                            variant = ButtonVariant.GHOST,
-                            size = ButtonSize.MEDIUM,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-
-            driveSession == null -> {
-                RevealFromBottom(visible = visible, delayMs = 500) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, colors.borderColor)
-                            .background(colors.bgSecondary)
-                            .padding(CxSpacing.lg),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        MonoText(
-                            text = "◈",
+                        androidx.compose.material3.Text(
+                            text = "Google Drive sync",
                             fontSize = CxTypography.text2xl,
-                            color = colors.textTertiary
+                            fontFamily = CxTypography.fontDisplay,
+                            fontWeight = CxTypography.weightExtrabold,
+                            color = colors.textPrimary,
                         )
-                        Spacer(Modifier.height(CxSpacing.sm))
-                        BodyText(
-                            text = "Connect your Google Drive above to start uploading files.",
-                            fontSize = CxTypography.textXs,
-                            textAlign = TextAlign.Center
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    androidx.compose.material3.Text(
+                        text = "Encrypted Drive backups for Vault notes are not available in this build yet. The Vault still keeps everything encrypted on this device — Drive sync arrives in a future release.",
+                        fontSize = CxTypography.textBase,
+                        fontFamily = CxTypography.fontBody,
+                        fontWeight = CxTypography.weightMedium,
+                        color = colors.textSecondary,
+                        lineHeight = CxTypography.textBase * 1.55,
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        com.clex.android.ui.components.KickerChip(
+                            text = "AES-256 ready",
+                            dotColors = listOf(com.clex.android.ui.theme.CxColors.mint, com.clex.android.ui.theme.CxColors.blue),
+                        )
+                        com.clex.android.ui.components.KickerChip(
+                            text = "no telemetry",
+                            dotColors = listOf(com.clex.android.ui.theme.CxColors.peach, com.clex.android.ui.theme.CxColors.yellow),
                         )
                     }
                 }
             }
-
-            else -> {
-                RevealFromBottom(visible = visible, delayMs = 500) {
-                    Column {
-                        BrutalistButton(
-                            text = if (selectedFiles.isEmpty()) "SELECT FILES" else "ADD MORE FILES",
-                            onClick = { filePicker.launch(arrayOf("*/*")) },
-                            variant = ButtonVariant.SECONDARY,
-                            size = ButtonSize.MEDIUM,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        if (selectedFiles.isNotEmpty()) {
-                            Spacer(Modifier.height(CxSpacing.lg))
-                            BrutalistCard {
-                                CardTitle(
-                                    text = "UPLOAD QUEUE",
-                                    fontSize = CxTypography.textBase,
-                                    color = colors.textPrimary
-                                )
-                                Spacer(Modifier.height(CxSpacing.sm))
-                                selectedFiles.forEachIndexed { index, file ->
-                                    CloudFileRow(
-                                        file = file,
-                                        onRemove = {
-                                            selectedFiles = selectedFiles.filterNot { it.uri == file.uri }
-                                        }
-                                    )
-                                    if (index < selectedFiles.lastIndex) {
-                                        Spacer(Modifier.height(CxSpacing.sm))
-                                    }
-                                }
-                                Spacer(Modifier.height(CxSpacing.md))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    MonoText(
-                                        text = "TOTAL",
-                                        fontSize = CxTypography.textXs,
-                                        color = colors.textTertiary
-                                    )
-                                    MonoText(
-                                        text = formatCloudBytes(selectedFiles.sumOf { it.size }),
-                                        fontSize = CxTypography.textXs,
-                                        color = colors.accent
-                                    )
-                                }
-                            }
-
-                            Spacer(Modifier.height(CxSpacing.lg))
-                            if (isUploading) {
-                                MonoText(
-                                    text = "UPLOADING TO DRIVE...",
-                                    fontSize = CxTypography.textSm,
-                                    color = colors.accent,
-                                    letterSpacing = CxTypography.textXs * 0.15
-                                )
-                                Spacer(Modifier.height(CxSpacing.sm))
-                                BrutalistProgressBar(progress = uploadProgress / 100f)
-                                Spacer(Modifier.height(CxSpacing.xs))
-                                MonoText(
-                                    text = "$uploadProgress%",
-                                    fontSize = CxTypography.textXs,
-                                    color = colors.textTertiary
-                                )
-                            }
-
-                            Spacer(Modifier.height(CxSpacing.lg))
-                            BrutalistButton(
-                                text = if (isUploading) "UPLOADING..." else "UPLOAD TO DRIVE →",
-                                onClick = {
-                                    val session = driveSession
-                                    if (!isUploading && session != null) {
-                                        scope.launch {
-                                            isUploading = true
-                                            uploadProgress = 4
-                                            uploadError = null
-                                            val uploadItems = withContext(Dispatchers.IO) {
-                                                selectedFiles.mapNotNull { file ->
-                                                    runCatching {
-                                                        val bytes = context.contentResolver.openInputStream(file.uri)
-                                                            ?.use { it.readBytes() }
-                                                            ?: return@mapNotNull null
-                                                        DriveUploadItem(
-                                                            name = file.name,
-                                                            mimeType = file.mimeType,
-                                                            bytes = bytes,
-                                                        )
-                                                    }.getOrNull()
-                                                }
-                                            }
-
-                                            if (uploadItems.size != selectedFiles.size) {
-                                                uploadError = "One or more files could not be read for Drive upload."
-                                                isUploading = false
-                                                return@launch
-                                            }
-
-                                            runCatching {
-                                                ClexDriveApi.uploadToDrive(uploadItems, session.token) { progress ->
-                                                    uploadProgress = progress
-                                                }
-                                            }.onSuccess { result ->
-                                                uploadResult = result
-                                                selectedFiles = emptyList()
-                                                CxHaptics.success(context)
-                                            }.onFailure { error ->
-                                                uploadError = error.message ?: "Drive upload failed."
-                                                CxHaptics.error(context)
-                                            }
-
-                                            isUploading = false
-                                        }
-                                    }
-                                },
-                                variant = ButtonVariant.PRIMARY,
-                                size = ButtonSize.LARGE,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-            }
         }
-
-        uploadError?.let { message ->
-            Spacer(Modifier.height(CxSpacing.md))
-            BrutalistCard {
-                CardTitle(
-                    text = "DRIVE ERROR",
-                    fontSize = CxTypography.textBase,
-                    color = CxColors.error
-                )
-                Spacer(Modifier.height(CxSpacing.sm))
-                BodyText(text = message, fontSize = CxTypography.textSm)
-            }
-        }
-
-        if (driveSession != null && selectedFiles.isEmpty() && uploadResult == null && !isUploading) {
-            val activeSession = driveSession
-            Spacer(Modifier.height(CxSpacing.md))
-            BrutalistCard {
-                BodyText(
-                    text = "Connected as ${activeSession?.user?.email ?: activeSession?.user?.displayName ?: activeSession?.user?.sub}. Pick files here and the app will upload them into your Drive-backed Clex folder using the real backend auth session.",
-                    fontSize = CxTypography.textSm,
-                    color = colors.textSecondary
-                )
-            }
-        }
-
         Spacer(Modifier.height(120.dp))
     }
 }
+
+
 
 private data class CloudDraftFile(
     val uri: Uri,
@@ -1878,93 +1564,10 @@ private data class CloudDraftFile(
     val size: Long,
 )
 
-@Composable
-private fun CloudFileRow(
-    file: CloudDraftFile,
-    onRemove: () -> Unit,
-) {
-    val colors = CxTheme.colors
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.borderColor)
-            .background(colors.bgCard)
-            .padding(horizontal = CxSpacing.md, vertical = CxSpacing.sm),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            MonoText(
-                text = file.name,
-                fontSize = CxTypography.textSm,
-                fontWeight = CxTypography.weightBold,
-                color = colors.textPrimary
-            )
-            Spacer(Modifier.height(CxSpacing.xs))
-            MonoText(
-                text = formatCloudBytes(file.size),
-                fontSize = CxTypography.textXs,
-                color = colors.textTertiary
-            )
-        }
-        BrutalistButton(
-            text = "REMOVE",
-            onClick = onRemove,
-            variant = ButtonVariant.GHOST,
-            size = ButtonSize.SMALL
-        )
-    }
-}
-
 private fun DriveSession?.toDriveStatusLine(): String {
     return this?.user?.email
         ?: this?.user?.displayName
         ?: if (this != null) "CONNECTED" else "SIGN IN REQUIRED"
-}
-
-private fun android.content.Context.toCloudDraftFile(uri: Uri): CloudDraftFile? {
-    val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
-    var name: String? = null
-    var size = 0L
-
-    contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)
-        ?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-                if (nameIndex >= 0) {
-                    name = cursor.getString(nameIndex)
-                }
-                if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) {
-                    size = cursor.getLong(sizeIndex)
-                }
-            }
-        }
-
-    val resolvedName = name?.takeIf { it.isNotBlank() }
-        ?: uri.lastPathSegment?.substringAfterLast('/')
-        ?: return null
-
-    return CloudDraftFile(
-        uri = uri,
-        name = resolvedName,
-        mimeType = mimeType,
-        size = size,
-    )
-}
-
-private fun formatCloudBytes(bytes: Long): String {
-    if (bytes <= 0L) return "0 B"
-    val units = listOf("B", "KB", "MB", "GB", "TB")
-    var value = bytes.toDouble()
-    var index = 0
-    while (value >= 1024 && index < units.lastIndex) {
-        value /= 1024.0
-        index += 1
-    }
-    val decimals = if (value >= 10 || index == 0) 0 else 1
-    return "%.${decimals}f %s".format(value, units[index])
 }
 
 private fun VaultSyncStatus.toBackupDescription(hasAccount: Boolean): String {
