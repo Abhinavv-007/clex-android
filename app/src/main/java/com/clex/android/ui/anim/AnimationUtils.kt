@@ -68,27 +68,15 @@ fun RevealFromBottom(
     delayMs: Long = 0,
     content: @Composable AnimatedVisibilityScope.() -> Unit
 ) {
-    var shouldShow by remember { mutableStateOf(false) }
-    LaunchedEffect(visible) {
-        if (visible) {
-            delay(delayMs)
-            shouldShow = true
-        } else {
-            shouldShow = false
-        }
-    }
-
+    // v1.15 — collapsed to an always-visible AnimatedVisibility so vault and
+    // workspace sub-tabs paint their full contents on first frame instead of
+    // staggering in piece by piece. Keeps the call signature stable across
+    // ~150 callsites; the stagger delays are now ignored.
     AnimatedVisibility(
-        visible = shouldShow,
+        visible = true,
         modifier = modifier,
-        enter = slideInVertically(
-            initialOffsetY = { it / 3 },
-            animationSpec = CxSpringSpecs.panel()
-        ) + fadeIn(animationSpec = tween(CxAnim.durationNormal)),
-        exit = slideOutVertically(
-            targetOffsetY = { it / 4 },
-            animationSpec = tween(CxAnim.durationFast)
-        ) + fadeOut(animationSpec = tween(CxAnim.durationFast)),
+        enter = EnterTransition.None,
+        exit = ExitTransition.None,
         content = content
     )
 }
@@ -101,34 +89,9 @@ fun StableRevealFromBottom(
     initialOffsetY: Int = 18,
     content: @Composable () -> Unit
 ) {
-    var shouldShow by remember(visible, delayMs) { mutableStateOf(false) }
-
-    LaunchedEffect(visible, delayMs) {
-        if (visible) {
-            shouldShow = false
-            delay(delayMs)
-            shouldShow = true
-        } else {
-            shouldShow = false
-        }
-    }
-
-    val alpha by animateFloatAsState(
-        targetValue = if (shouldShow) 1f else 0f,
-        animationSpec = tween(CxAnim.durationNormal, easing = EaseOutCubic),
-        label = "stableRevealAlpha"
-    )
-    val offsetY by animateDpAsState(
-        targetValue = if (shouldShow) 0.dp else initialOffsetY.dp,
-        animationSpec = tween(CxAnim.durationNormal, easing = EaseOutCubic),
-        label = "stableRevealOffset"
-    )
-
-    Box(
-        modifier = modifier
-            .offset(y = offsetY)
-            .alpha(alpha)
-    ) {
+    // v1.15 — instant render. The stagger animation hid the page mid-swap and
+    // made Vault → Chain switches feel like the screen was disassembling.
+    Box(modifier = modifier) {
         content()
     }
 }
@@ -139,26 +102,10 @@ fun SlamIn(
     delayMs: Long = 0,
     content: @Composable AnimatedVisibilityScope.() -> Unit
 ) {
-    var shouldShow by remember { mutableStateOf(false) }
-    LaunchedEffect(visible) {
-        if (visible) {
-            delay(delayMs)
-            shouldShow = true
-        } else {
-            shouldShow = false
-        }
-    }
-
     AnimatedVisibility(
-        visible = shouldShow,
-        enter = scaleIn(
-            initialScale = 1.15f,
-            animationSpec = CxSpringSpecs.slam()
-        ) + fadeIn(animationSpec = tween(CxAnim.durationFast)),
-        exit = scaleOut(
-            targetScale = 0.95f,
-            animationSpec = tween(CxAnim.durationFast)
-        ) + fadeOut(),
+        visible = true,
+        enter = EnterTransition.None,
+        exit = ExitTransition.None,
         content = content
     )
 }
@@ -169,23 +116,10 @@ fun StampIn(
     delayMs: Long = 0,
     content: @Composable AnimatedVisibilityScope.() -> Unit
 ) {
-    var shouldShow by remember { mutableStateOf(false) }
-    LaunchedEffect(visible) {
-        if (visible) {
-            delay(delayMs)
-            shouldShow = true
-        } else {
-            shouldShow = false
-        }
-    }
-
     AnimatedVisibility(
-        visible = shouldShow,
-        enter = scaleIn(
-            initialScale = 2.0f,
-            animationSpec = CxSpringSpecs.snap()
-        ) + fadeIn(animationSpec = tween(100)),
-        exit = fadeOut(animationSpec = tween(CxAnim.durationFast)),
+        visible = true,
+        enter = EnterTransition.None,
+        exit = ExitTransition.None,
         content = content
     )
 }

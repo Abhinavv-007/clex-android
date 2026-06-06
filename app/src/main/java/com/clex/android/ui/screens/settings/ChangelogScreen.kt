@@ -30,8 +30,8 @@ import com.clex.android.ChangelogEntry
 import com.clex.android.ui.anim.RevealFromBottom
 import com.clex.android.ui.anim.rememberEntryVisibility
 import com.clex.android.ui.components.BodyText
+import com.clex.android.ui.components.BrandLogoImage
 import com.clex.android.ui.components.MonoText
-import com.clex.android.ui.components.PageMark
 import com.clex.android.ui.components.SectionLabel
 import com.clex.android.ui.components.SectionTitle
 import com.clex.android.ui.components.TopBarStatusChip
@@ -95,7 +95,15 @@ fun ChangelogScreen(
                             )
                             .padding(end = CxSpacing.md)
                     )
-                    PageMark(glyph = "⟳", title = "CHANGELOG")
+                    BrandLogoImage(size = 24.dp)
+                    Spacer(Modifier.width(CxSpacing.sm))
+                    MonoText(
+                        text = "CHANGELOG",
+                        fontSize = CxTypography.textLg,
+                        fontWeight = CxTypography.weightBold,
+                        color = colors.textPrimary,
+                        letterSpacing = CxTypography.textXs * 0.1
+                    )
                 }
                 TopBarStatusChip(
                     text = AppRelease.versionName,

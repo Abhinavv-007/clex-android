@@ -7,10 +7,22 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.14.0"
-    const val versionCode = 250
+    const val versionName = "1.15.0"
+    const val versionCode = 251
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.15.0",
+            releasedOn = "06 Jun 2026",
+            notes = listOf(
+                "Real brand artwork everywhere — the Clex gem-mosaic mark now ships as the launcher icon (light + dark adaptive variants) and as the in-app BrandMark across splash, home, settings, help, privacy, and changelog. The placeholder vector diamond is gone.",
+                "Vault tab swaps are instant — switching between Notes, Secret, Cloud, and Vault+ no longer plays a directional slide that re-staged each card's stagger. The page repaints in place; the FlatTabBar pill is the only animated affordance.",
+                "Workspace sub-tabs (Send, Receive, Tools) get the same instant repaint treatment — switching during a Clex Link handoff no longer feels like the screen is disassembling.",
+                "Cloud / Google Drive backup is gated as Coming Soon. Cloud tab already showed the locked state; Vault+ Account and Cloud Backup rows now match — no more half-wired toggles, sync-now buttons, or restore actions for a feature that isn't shipping yet.",
+                "Splash + home tagline rewritten — 'your files, everywhere they go' replaces the older 'drop, prepare, share' line.",
+                "Section staggers across vault, workspace, and chain were globally collapsed to instant render — RevealFromBottom / StableRevealFromBottom / SlamIn / StampIn are now no-op pass-throughs so first paint is the final paint.",
+            )
+        ),
         ChangelogEntry(
             version = "1.14.0",
             releasedOn = "06 Jun 2026",

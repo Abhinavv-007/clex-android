@@ -222,25 +222,15 @@ fun WorkspaceScreen() {
             Spacer(Modifier.height(CxSpacing.md))
 
             // ── Content ──
-            // AnimatedContent with directional slides keyed by tab ordinal so
-            // tabs animate in/out in the direction of travel rather than the
-            // old Crossfade(220ms) which kept both tabs composed at once.
-            // The role-gated Clex Link handoff effects (sender + receiver) no
-            // longer race during the transition because the exiting tab is
-            // already on its way out, but switching to a directional slide
-            // also makes the transition feel intentional instead of soft.
-            AnimatedContent(
+            // v1.15 — direct render, no AnimatedContent. Sub-tab swaps
+            // (Send / Receive / Tools) repaint in place; the FlatTabBar pill
+            // is the only animated affordance during the change.
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                targetState = currentTab,
-                transitionSpec = {
-                    val forward = targetState.ordinal > initialState.ordinal
-                    sharedAxisX(forward = forward) using SizeTransform(clip = false)
-                },
-                label = "tabContent",
-            ) { tab ->
-                when (tab) {
+            ) {
+                when (currentTab) {
                     WorkspaceTab.SEND -> LiveSendTab(
                         controller = senderController,
                         nearbySession = nearbySession,

@@ -175,14 +175,14 @@ fun SplashScreen(onComplete: () -> Unit) {
 
             Spacer(Modifier.height(18.dp))
 
-            // Cursive accent — "made for you"
+            // Cursive accent — primary tagline.
             Box(
                 modifier = Modifier
                     .alpha(cursiveAlpha)
                     .graphicsLayer { translationY = cursiveLift },
             ) {
                 CursiveAccent(
-                    text = "made for you.",
+                    text = "your files,",
                     fontSize = CxTypography.text2xl,
                 )
             }
@@ -190,7 +190,7 @@ fun SplashScreen(onComplete: () -> Unit) {
             Spacer(Modifier.height(8.dp))
 
             androidx.compose.material3.Text(
-                text = "drop · prepare · share",
+                text = "everywhere they go",
                 fontSize = CxTypography.textSm,
                 fontFamily = CxTypography.fontDisplay,
                 fontWeight = CxTypography.weightMedium,

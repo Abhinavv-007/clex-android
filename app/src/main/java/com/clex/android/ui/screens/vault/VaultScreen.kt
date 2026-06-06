@@ -106,22 +106,17 @@ fun VaultScreen() {
             Spacer(Modifier.height(CxSpacing.md))
 
             // ── Content ──
-            // Match the workspace tab transition shape (v1.9.10): directional
-            // slides keyed by ordinal so vault tabs swap in the direction of
-            // travel rather than soft-fading. Order: NOTES → SECRET → CLOUD →
-            // SETTINGS.
-            AnimatedContent(
+            // v1.15 — direct render, no AnimatedContent. The previous
+            // sharedAxisX swap re-staged each tab's RevealFromBottom stagger
+            // every time, which read as the page "disassembling" mid-swap.
+            // The tab content now repaints in place; the FlatTabBar pill is
+            // the only thing that animates between selections.
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                targetState = currentTab,
-                transitionSpec = {
-                    val forward = targetState.ordinal > initialState.ordinal
-                    sharedAxisX(forward = forward) using SizeTransform(clip = false)
-                },
-                label = "vaultTab",
-            ) { tab ->
-                when (tab) {
+            ) {
+                when (currentTab) {
                     VaultTab.NOTES -> NotesTab(tabVisible)
                     VaultTab.SECRET -> SecretShareTab(tabVisible)
                     VaultTab.CLOUD -> CloudShareTab(tabVisible)
@@ -1681,12 +1676,8 @@ private fun VaultSettingsTab(visible: Boolean) {
         listOf(
             Triple(
                 "ACCOUNT",
-                accountSummary,
-                if (driveSession != null) {
-                    "Active Google account used for encrypted backup sync and device registration."
-                } else {
-                    "Google Drive is not connected on this device yet."
-                }
+                "LOCAL ONLY",
+                "Account-tied vault sync arrives with the Drive backup release."
             ),
             Triple(
                 "ENCRYPTION",
@@ -1709,8 +1700,8 @@ private fun VaultSettingsTab(visible: Boolean) {
             ),
             Triple(
                 "CLOUD BACKUP",
-                if (vaultPreferences.cloudBackupEnabled) "ENABLED" else "DISABLED",
-                syncStatus.toBackupDescription(driveSession != null)
+                "COMING SOON",
+                "Encrypted Drive backups are not available in this build yet. Notes stay encrypted on this device."
             ),
             Triple(
                 "ACCOUNT DEVICES",
@@ -1746,16 +1737,12 @@ private fun VaultSettingsTab(visible: Boolean) {
                 ) {
                     when (title) {
                         "ACCOUNT" -> {
-                            VaultSettingValueRow("DRIVE", driveSession?.toDriveStatusLine() ?: "NOT CONNECTED")
+                            VaultSettingValueRow("DRIVE", "COMING SOON")
                             Spacer(Modifier.height(CxSpacing.sm))
-                            VaultSettingValueRow("SYNC STATUS", syncStatus.toNotesStatusLine())
+                            VaultSettingValueRow("SYNC STATUS", "LOCAL-FIRST ENCRYPTED STORAGE")
                             Spacer(Modifier.height(CxSpacing.md))
                             BodyText(
-                                text = if (driveSession == null) {
-                                    "Connect Google Drive in the Cloud tab to unlock same-account vault sync on Android."
-                                } else {
-                                    "This account is used for encrypted backup snapshots and account-device registration."
-                                },
+                                text = "Account-tied vault sync ships alongside encrypted Drive backups in a future release. Notes stay encrypted on this device in the meantime.",
                                 fontSize = CxTypography.textXs
                             )
                         }
@@ -1857,34 +1844,13 @@ private fun VaultSettingsTab(visible: Boolean) {
                         }
 
                         "CLOUD BACKUP" -> {
-                            VaultSettingValueRow("BACKUP", if (vaultPreferences.cloudBackupEnabled) "ENABLED" else "DISABLED")
+                            VaultSettingValueRow("BACKUP", "COMING SOON")
                             Spacer(Modifier.height(CxSpacing.sm))
-                            VaultSettingValueRow("LAST SYNC", syncStatus.lastSyncedAt?.let(::formatSyncTimestamp) ?: "NOT YET")
+                            VaultSettingValueRow("LAST SYNC", "—")
                             Spacer(Modifier.height(CxSpacing.md))
-                            BrutalistButton(
-                                text = if (vaultPreferences.cloudBackupEnabled) "DISABLE CLOUD BACKUP" else "ENABLE CLOUD BACKUP",
-                                onClick = {
-                                    preferencesStore.setCloudBackupEnabled(!vaultPreferences.cloudBackupEnabled)
-                                },
-                                variant = ButtonVariant.SECONDARY,
-                                size = ButtonSize.MEDIUM,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(Modifier.height(CxSpacing.sm))
-                            BrutalistButton(
-                                text = "SYNC NOW",
-                                onClick = { notesStore.syncNow() },
-                                variant = ButtonVariant.PRIMARY,
-                                size = ButtonSize.MEDIUM,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(Modifier.height(CxSpacing.sm))
-                            BrutalistButton(
-                                text = "RESTORE CLOUD BACKUP",
-                                onClick = { notesStore.restoreFromCloud() },
-                                variant = ButtonVariant.SECONDARY,
-                                size = ButtonSize.MEDIUM,
-                                modifier = Modifier.fillMaxWidth()
+                            BodyText(
+                                text = "Encrypted Drive backups for Vault notes are not available in this build yet. The Vault still keeps everything encrypted on this device — Drive sync arrives in a future release.",
+                                fontSize = CxTypography.textXs
                             )
                         }
 

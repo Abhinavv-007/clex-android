@@ -253,7 +253,7 @@ private fun Hero(onPrimary: () -> Unit) {
         }
         Spacer(Modifier.height(20.dp))
         Text(
-            text = "Drop, prepare, share. Clex routes through whichever path lands fastest — direct, local, or cloud — end-to-end encrypted.",
+            text = "Encrypted. End-to-end. Direct, local, or cloud — Clex picks the path that lands first.",
             color = colors.textSecondary,
             fontSize = 15.sp,
             fontFamily = CxTypography.fontBody,
