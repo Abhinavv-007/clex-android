@@ -20,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.clex.android.R
+import com.clex.android.ui.components.BrandMarkHero
 import com.clex.android.ui.components.CursiveAccent
 import com.clex.android.ui.components.LiquidMeshBackground
 import com.clex.android.ui.theme.*
@@ -158,17 +159,19 @@ fun SplashScreen(onComplete: () -> Unit) {
 
         // Layer 3 — content
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                painter = painterResource(
-                    id = if (colors.isDark) R.drawable.clex_logo_light
-                    else R.drawable.clex_logo_dark
-                ),
-                contentDescription = "Clex",
+            Box(
                 modifier = Modifier
                     .size(140.dp)
                     .scale(logoScale * breatheScale)
                     .alpha(logoAlpha),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                BrandMarkHero(
+                    size = 132.dp,
+                    fillColor = if (colors.isDark) CxColors.cream else CxColors.ink,
+                    slashColor = if (colors.isDark) CxColors.ink else CxColors.cream,
+                )
+            }
 
             Spacer(Modifier.height(18.dp))
 

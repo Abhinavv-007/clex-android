@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clex.android.ui.components.BrandMark
+import com.clex.android.ui.components.CursiveAccent
 import com.clex.android.ui.components.CxIcon
 import com.clex.android.ui.components.CxIconType
 import com.clex.android.ui.components.HRule
@@ -219,15 +220,18 @@ private fun Hero(onPrimary: () -> Unit) {
             letterSpacing = (-1.5).sp,
             lineHeight = 60.sp,
         )
-        Text(
-            text = "Every route",
-            color = colors.textPrimary,
-            fontSize = 56.sp,
-            fontFamily = CxTypography.fontDisplay,
-            fontWeight = FontWeight.W700,
-            letterSpacing = (-1.5).sp,
-            lineHeight = 60.sp,
-        )
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = "Every ",
+                color = colors.textPrimary,
+                fontSize = 56.sp,
+                fontFamily = CxTypography.fontDisplay,
+                fontWeight = FontWeight.W700,
+                letterSpacing = (-1.5).sp,
+                lineHeight = 60.sp,
+            )
+            CursiveAccent(text = "route", fontSize = 56.sp)
+        }
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = "covered",

@@ -30,12 +30,11 @@ fun BrandLogoImage(
     modifier: Modifier = Modifier,
     size: Dp = 28.dp
 ) {
-    Image(
-        painter = painterResource(id = R.drawable.clex_app_logo),
-        contentDescription = "Clex logo",
-        modifier = modifier
-            .size(size)
-            .clip(RoundedCornerShape(10.dp))
+    BrandMark(
+        modifier = modifier,
+        size = size,
+        color = CxTheme.colors.textPrimary,
+        cornerRadius = (size.value * 0.12f).dp,
     )
 }
 

@@ -236,36 +236,22 @@ fun WorkspaceScreen() {
                 targetState = currentTab,
                 transitionSpec = {
                     val forward = targetState.ordinal > initialState.ordinal
-                    val slideSpec = tween<IntOffset>(durationMillis = 260, easing = FastOutSlowInEasing)
-                    val fadeSpec = tween<Float>(durationMillis = 200, easing = LinearEasing)
-                    val enter = slideIntoContainer(
-                        towards = if (forward) AnimatedContentTransitionScope.SlideDirection.Left
-                        else AnimatedContentTransitionScope.SlideDirection.Right,
-                        animationSpec = slideSpec,
-                    ) + fadeIn(animationSpec = fadeSpec)
-                    val exit = slideOutOfContainer(
-                        towards = if (forward) AnimatedContentTransitionScope.SlideDirection.Left
-                        else AnimatedContentTransitionScope.SlideDirection.Right,
-                        animationSpec = slideSpec,
-                    ) + fadeOut(animationSpec = fadeSpec)
-                    enter togetherWith exit using SizeTransform(clip = false)
+                    sharedAxisX(forward = forward) using SizeTransform(clip = false)
                 },
                 label = "tabContent",
             ) { tab ->
-                RevealFromBottom(visible = tabVisible) {
-                    when (tab) {
-                        WorkspaceTab.SEND -> LiveSendTab(
-                            controller = senderController,
-                            nearbySession = nearbySession,
-                            onEnsureNearbyReady = ::ensureNearbyReady,
-                            onPickFiles = { filePicker.launch(arrayOf("*/*")) }
-                        )
-                        WorkspaceTab.RECEIVE -> LiveReceiveTab(
-                            controller = receiverController,
-                            nearbySession = nearbySession
-                        )
-                        WorkspaceTab.TOOLS -> ToolsTab()
-                    }
+                when (tab) {
+                    WorkspaceTab.SEND -> LiveSendTab(
+                        controller = senderController,
+                        nearbySession = nearbySession,
+                        onEnsureNearbyReady = ::ensureNearbyReady,
+                        onPickFiles = { filePicker.launch(arrayOf("*/*")) }
+                    )
+                    WorkspaceTab.RECEIVE -> LiveReceiveTab(
+                        controller = receiverController,
+                        nearbySession = nearbySession
+                    )
+                    WorkspaceTab.TOOLS -> ToolsTab()
                 }
             }
         }

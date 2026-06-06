@@ -54,17 +54,17 @@ private data class PrivacySection(
 
 private val privacyHighlights = listOf(
     PrivacyHighlight(
-        icon = "🔒",
+        icon = "01",
         title = "NO P2P FILE STORAGE",
         body = "Direct and local transfers do not store file contents on Clex servers."
     ),
     PrivacyHighlight(
-        icon = "👤",
+        icon = "02",
         title = "LOCAL VAULT ENCRYPTION",
         body = "Vault notes stay encrypted on your device, with keys derived or stored locally."
     ),
     PrivacyHighlight(
-        icon = "📊",
+        icon = "03",
         title = "SCOPED DRIVE METADATA",
         body = "Temporary Drive-share metadata and auth signals are limited to what Vault needs to work."
     )

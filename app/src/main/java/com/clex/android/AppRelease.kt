@@ -7,10 +7,25 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.12.0"
-    const val versionCode = 230
+    const val versionName = "1.13.0"
+    const val versionCode = 240
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.13.0",
+            releasedOn = "06 Jun 2026",
+            notes = listOf(
+                "Brand palette restored — cream + lavender on light, ink + lavender on dark. Surfaces, cards, accents now match the website mood again.",
+                "Cursive Pacifico accent back on the home hero — 'Every route' renders in the brand cursive with the gradient brush, just like the web hero.",
+                "Bottom nav fixed — Settings label no longer wraps to a second line. Active pill widened, label uses softWrap=false, expand timing tightened.",
+                "Launcher icon redrawn — bolder ink diamond, cream slash, lavender accent dot. New light + dark adaptive vectors plus regenerated mipmap PNGs at every density.",
+                "Splash now uses the new BrandMarkHero composable instead of the legacy clex_logo PNG.",
+                "Workspace tab swap uses the unified shared-axis transition (no more old soft pop on Send/Receive/Tools). Vault tabs use the same swap.",
+                "Developer screen rewritten — surfaces application id, version + build code, build type, channel, device fingerprint (tap to copy), device model + Android version + ABI, signaling URL, BLE manufacturer id, API base, chain feed, and links to repository, email, LinkedIn, Instagram.",
+                "Privacy highlights stripped of emoji — section markers now use 01 / 02 / 03 numbering for a cleaner read.",
+                "BrandLogoImage now resolves to the new BrandMark vector instead of the old clex_app_logo PNG, so any leftover top bars pick up the new mark.",
+            )
+        ),
         ChangelogEntry(
             version = "1.12.0",
             releasedOn = "06 Jun 2026",

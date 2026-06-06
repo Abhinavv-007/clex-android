@@ -113,7 +113,7 @@ private fun NavPill(
         animationSpec = ClexMotion.defaultSpring(),
         label = "nav-expand",
     )
-    val pillW = (44 + 64 * expand).dp
+    val pillW = (52 + 80 * expand).dp
     val bg = if (active) colors.textPrimary else Color.Transparent
     val fg = if (active) colors.textInverse else colors.textSecondary
     Box(
@@ -128,7 +128,7 @@ private fun NavPill(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 14.dp),
+            modifier = Modifier.padding(horizontal = 12.dp),
         ) {
             CxIcon(
                 icon = icon,
@@ -136,7 +136,7 @@ private fun NavPill(
                 color = fg,
                 strokeWidth = 1.6.dp,
             )
-            if (active) {
+            if (active && expand > 0.6f) {
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = label,
@@ -145,6 +145,8 @@ private fun NavPill(
                     fontFamily = CxTypography.fontDisplay,
                     fontWeight = FontWeight.W600,
                     letterSpacing = 0.2.sp,
+                    maxLines = 1,
+                    softWrap = false,
                 )
             }
         }

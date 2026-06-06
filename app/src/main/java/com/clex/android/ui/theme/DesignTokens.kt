@@ -48,25 +48,26 @@ object CxColors {
 
     val surfaceOverlay = Color(0x99000000)
 
-    // Light mode — "Paper + Ink + Electric" v1.12 redesign
-    val lightBgPrimary = Color(0xFFFAFAF7)
-    val lightBgSecondary = Color(0xFFF2F2EE)
-    val lightBgTertiary = Color(0xFFEDEDE8)
-    val lightBgCard = Color(0xFFFFFFFF)
-    val lightBgCardHover = Color(0xFFF7F7F2)
+    // Light mode — restored cream/lavender brand palette (v1.13).
+    // Matches clex.in: cream paper, deep lavender accent, ink type.
+    val lightBgPrimary = Color(0xFFF6EFDF)
+    val lightBgSecondary = Color(0xFFEFE6CF)
+    val lightBgTertiary = Color(0xFFEBE2C9)
+    val lightBgCard = Color(0xFFFFFAEB)
+    val lightBgCardHover = Color(0xFFFFF5DB)
     val lightBgElevated = Color(0xFFFFFFFF)
-    val lightBgInput = Color(0xFFF2F2EE)
+    val lightBgInput = Color(0xFFFAF5E8)
 
-    val lightTextPrimary = Color(0xFF0E0E10)
-    val lightTextSecondary = Color(0xFF55555A)
-    val lightTextTertiary = Color(0xFF8A8A8F)
-    val lightTextInverse = Color(0xFFFAFAF7)
+    val lightTextPrimary = Color(0xFF0E0E0D)
+    val lightTextSecondary = Color(0xFF4A4642)
+    val lightTextTertiary = Color(0xFF7A7670)
+    val lightTextInverse = Color(0xFFFAF5E8)
 
-    val lightBorderColor = Color(0xFFE5E5E0)
-    val lightBorderBold = Color(0xFF0E0E10)
-    val lightBorderSubtle = Color(0xFFEDEDE8)
+    val lightBorderColor = Color(0xFFE3D9C0)
+    val lightBorderBold = Color(0xFF0E0E0D)
+    val lightBorderSubtle = Color(0xFFEBE2C9)
 
-    val lightShadowColor = Color(0xFF0E0E10)
+    val lightShadowColor = Color(0xFF0E0E0D)
 
     // Brand pastel palette
     val cream      = Color(0xFFF6EFDF)
