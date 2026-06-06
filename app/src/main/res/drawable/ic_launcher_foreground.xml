@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/clex_logo_dark"
-    android:insetLeft="18dp"
-    android:insetTop="18dp"
-    android:insetRight="18dp"
-    android:insetBottom="18dp" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- v1.12 BrandMark: rounded 45° diamond with diagonal slash + dot.
+         Foreground draws a 60dp mark centered in the 108dp canvas, leaving
+         24dp safe-area inset that adaptive icons mask off on launchers. -->
+    <group
+        android:translateX="54"
+        android:translateY="54">
+        <path
+            android:fillColor="#0E0E10"
+            android:pathData="M0,-24 C2.5,-24 3.5,-23 4.5,-22 L22,-4.5 C23,-3.5 24,-2.5 24,0 C24,2.5 23,3.5 22,4.5 L4.5,22 C3.5,23 2.5,24 0,24 C-2.5,24 -3.5,23 -4.5,22 L-22,4.5 C-23,3.5 -24,2.5 -24,0 C-24,-2.5 -23,-3.5 -22,-4.5 L-4.5,-22 C-3.5,-23 -2.5,-24 0,-24 Z" />
+        <path
+            android:fillColor="#FAFAF7"
+            android:pathData="M-9,9 L9,-9 L11.5,-6.5 L-6.5,11.5 Z" />
+        <path
+            android:fillColor="#FAFAF7"
+            android:pathData="M14,-12 m-2.6,0 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0" />
+    </group>
+</vector>

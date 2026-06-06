@@ -7,10 +7,28 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.11.0"
-    const val versionCode = 220
+    const val versionName = "1.12.0"
+    const val versionCode = 230
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.12.0",
+            releasedOn = "06 Jun 2026",
+            notes = listOf(
+                "Full UI overhaul — new 'Ledger' design system. Paper + ink + a single electric accent. Glass mesh, blob bento, cinematic mesh-floor backgrounds removed across Home, Vault, Workspace, Chain, Settings.",
+                "New BrandMark — geometric rounded diamond with a slash + dot. Replaces the old wordmark across splash, home header, settings about card, and adaptive launcher icons. Dark/light theme variants ship as separate vectors and density PNGs.",
+                "Light mode is now the default theme on first launch. Existing installs keep whatever they last had.",
+                "CxIcon set rebuilt — 36 sharper 1.5dp-stroke glyphs (added arrow_right, arrow_up_right, bolt, file, folder, key, eye, eye_off, copy, trash, check, dot, grid, inbox, send, radio, chevron_left). The old soft 1.8dp set retired.",
+                "New layout primitives — EdgeHeader, SectionLabel (numbered '01 02 03'), LedgerRow (icon + label + value + chevron), HRule (1px ink rule), FlatTabBar (segmented ink-on-paper pill), PressableCard, MetricRow, StatusDot.",
+                "Bottom nav redesigned — solid paper card, 1px ink ring, soft drop shadow. Active tab now expands to a filled ink capsule with label, inactive collapses to icon-only. No glass blur, no mesh, no breathe cycle.",
+                "Unified motion system — single canonical spring (380/0.78) used for press scale, tab swap (shared-axis X 32dp + crossfade), and reveal. Press now fires a haptic and depresses to 0.97x. Old infinite breathe / drift loops removed.",
+                "Vault top bar rewritten — kicker label + 'Private vault' headline + encrypted status pill, on a flat paper plate. Tab selector swapped for the new FlatTabBar.",
+                "Workspace top bar rewritten — 'Drop. Route. Share.' headline + send glyph, FlatTabBar for Send/Receive/Tools.",
+                "Chain top bar rewritten — 'Routing ledger' headline + chain glyph + public-ledger status.",
+                "Settings rewritten — numbered ledger sections (Appearance / Help & info / About). Theme knob now a clean ink-on-paper toggle. About card surfaces the new BrandMark + version + build + channel.",
+                "Home rewritten — big editorial type ('One drop. Every route covered.' with electric accent dot), numbered ledger sections (Surfaces / Status / Help) replacing the old bento blob grid.",
+            )
+        ),
         ChangelogEntry(
             version = "1.11.0",
             releasedOn = "06 Jun 2026",

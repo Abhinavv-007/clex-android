@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.clex.android.data.CreatedSecret
 import com.clex.android.data.ClexDriveApi
@@ -86,23 +87,23 @@ enum class VaultTab { NOTES, SECRET, CLOUD, SETTINGS }
 fun VaultScreen() {
     var currentTab by remember { mutableStateOf(VaultTab.NOTES) }
     val tabVisible = rememberEntryVisibility(currentTab)
+    val colors = CxTheme.colors
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (CxTheme.colors.isDark) CxColors.bgPrimary else CxColors.cream)
+            .background(colors.bgPrimary)
     ) {
-        com.clex.android.ui.components.LiquidMeshBackground(
-            modifier = Modifier.matchParentSize(),
-            intensity = 0.7f,
-        )
-
         Column(modifier = Modifier.fillMaxSize()) {
             // ── Top Bar ──
             VaultTopBar()
 
+            Spacer(Modifier.height(CxSpacing.md))
+
             // ── Tab Selector ──
             VaultTabSelector(currentTab) { currentTab = it }
+
+            Spacer(Modifier.height(CxSpacing.md))
 
             // ── Content ──
             // Match the workspace tab transition shape (v1.9.10): directional
@@ -146,17 +147,64 @@ fun VaultScreen() {
 @Composable
 private fun VaultTopBar() {
     val colors = CxTheme.colors
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .background(colors.bgPrimary)
-            .padding(horizontal = CxSpacing.screenHorizontal, vertical = CxSpacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(
+                start = CxSpacing.screenHorizontal,
+                end = CxSpacing.screenHorizontal,
+                top = CxSpacing.lg,
+                bottom = CxSpacing.md,
+            ),
     ) {
-        PageMark(glyph = "◈", title = "VAULT")
-        TopBarStatusChip(text = "ENCRYPTED", accentColor = CxColors.success, showDot = true)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            androidx.compose.material3.Text(
+                text = "VAULT",
+                color = colors.textTertiary,
+                fontSize = 11.sp,
+                fontFamily = CxTypography.fontDisplay,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
+                letterSpacing = 1.6.sp,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                com.clex.android.ui.components.StatusDot(color = colors.success)
+                Spacer(Modifier.width(8.dp))
+                androidx.compose.material3.Text(
+                    text = "ENCRYPTED",
+                    color = colors.success,
+                    fontSize = 11.sp,
+                    fontFamily = CxTypography.fontDisplay,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.W700,
+                    letterSpacing = 1.5.sp,
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            androidx.compose.material3.Text(
+                text = "Private vault",
+                color = colors.textPrimary,
+                fontSize = 32.sp,
+                fontFamily = CxTypography.fontDisplay,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.W700,
+                letterSpacing = (-0.5).sp,
+            )
+            com.clex.android.ui.components.CxIcon(
+                icon = com.clex.android.ui.components.CxIconType.SHIELD,
+                size = 26.dp,
+                color = colors.textPrimary,
+                strokeWidth = 1.5.dp,
+            )
+        }
     }
 }
 
@@ -165,62 +213,12 @@ private fun VaultTabSelector(
     currentTab: VaultTab,
     onSelect: (VaultTab) -> Unit
 ) {
-    val colors = CxTheme.colors
-    val hapticView = rememberHapticView()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CxSpacing.screenHorizontal)
-            .clip(RoundedCornerShape(22.dp))
-            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.72f else 0.92f))
-            .border(1.dp, colors.borderSubtle, RoundedCornerShape(22.dp))
-    ) {
-        VaultTab.entries.forEach { tab ->
-            val isActive = tab == currentTab
-            val label = when (tab) {
-                VaultTab.NOTES -> "NOTES"
-                VaultTab.SECRET -> "SECRET"
-                VaultTab.CLOUD -> "CLOUD"
-                VaultTab.SETTINGS -> "VAULT+"
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(4.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(
-                        if (isActive) colors.accent.copy(alpha = if (colors.isDark) 0.16f else 0.12f)
-                        else Color.Transparent
-                    )
-                    .border(
-                        width = if (isActive) 1.dp else 0.dp,
-                        color = if (isActive) colors.accent.copy(alpha = 0.42f) else Color.Transparent,
-                        shape = RoundedCornerShape(18.dp)
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {
-                            if (!isActive) CxHaptics.snap(hapticView)
-                            onSelect(tab)
-                        }
-                    )
-                    .padding(vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                MonoText(
-                    text = label,
-                    fontSize = CxTypography.textXs,
-                    fontWeight = if (isActive) CxTypography.weightBlack else CxTypography.weightMedium,
-                    color = if (isActive) colors.accent else colors.textTertiary,
-                    letterSpacing = CxTypography.textXs * 0.08,
-                    maxLines = 1
-                )
-            }
-        }
-    }
+    val labels = listOf("Notes", "Secret", "Cloud", "Vault+")
+    com.clex.android.ui.components.FlatTabBar(
+        tabs = labels,
+        selected = currentTab.ordinal,
+        onSelect = { i -> onSelect(VaultTab.entries[i]) },
+    )
 }
 
 // ═══════════════════════════════════════════════════

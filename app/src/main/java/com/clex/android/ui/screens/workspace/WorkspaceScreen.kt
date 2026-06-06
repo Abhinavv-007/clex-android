@@ -208,19 +208,18 @@ fun WorkspaceScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (colors.isDark) colors.bgPrimary else CxColors.cream)
+            .background(colors.bgPrimary)
     ) {
-        com.clex.android.ui.components.LiquidMeshBackground(
-            modifier = Modifier.matchParentSize(),
-            intensity = 0.7f,
-        )
-
         Column(modifier = Modifier.fillMaxSize()) {
             // ── Top Bar ──
             WorkspaceTopBar()
 
+            Spacer(Modifier.height(CxSpacing.md))
+
             // ── Tab Selector ──
             TabSelector(currentTab) { currentTab = it }
+
+            Spacer(Modifier.height(CxSpacing.md))
 
             // ── Content ──
             // AnimatedContent with directional slides keyed by tab ordinal so
@@ -297,16 +296,47 @@ fun WorkspaceScreen() {
 
 @Composable
 private fun WorkspaceTopBar() {
-    Row(
+    val colors = CxTheme.colors
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .background(CxTheme.colors.bgPrimary)
-            .padding(horizontal = CxSpacing.screenHorizontal, vertical = CxSpacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
+            .padding(
+                start = CxSpacing.screenHorizontal,
+                end = CxSpacing.screenHorizontal,
+                top = CxSpacing.lg,
+                bottom = CxSpacing.md,
+            ),
     ) {
-        PageMark(glyph = "◎", title = "WORKSPACE")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            androidx.compose.material3.Text(
+                text = "WORKSPACE",
+                color = colors.textTertiary,
+                fontSize = 11.sp,
+                fontFamily = CxTypography.fontDisplay,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
+                letterSpacing = 1.6.sp,
+            )
+            com.clex.android.ui.components.CxIcon(
+                icon = com.clex.android.ui.components.CxIconType.SEND,
+                size = 22.dp,
+                color = colors.textPrimary,
+                strokeWidth = 1.5.dp,
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        androidx.compose.material3.Text(
+            text = "Drop. Route. Share.",
+            color = colors.textPrimary,
+            fontSize = 28.sp,
+            fontFamily = CxTypography.fontDisplay,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.W700,
+            letterSpacing = (-0.5).sp,
+        )
     }
 }
 
@@ -315,55 +345,12 @@ private fun TabSelector(
     currentTab: WorkspaceTab,
     onSelect: (WorkspaceTab) -> Unit
 ) {
-    val colors = CxTheme.colors
-    val tabs = WorkspaceTab.entries
-    val hapticView = rememberHapticView()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CxSpacing.screenHorizontal)
-            .clip(RoundedCornerShape(22.dp))
-            .background(colors.bgCard.copy(alpha = if (colors.isDark) 0.72f else 0.92f))
-            .border(1.dp, colors.borderSubtle, RoundedCornerShape(22.dp))
-    ) {
-        tabs.forEach { tab ->
-            val isActive = tab == currentTab
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(4.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(
-                        if (isActive) colors.accent.copy(alpha = if (colors.isDark) 0.16f else 0.12f)
-                        else Color.Transparent
-                    )
-                    .border(
-                        width = if (isActive) 1.dp else 0.dp,
-                        color = if (isActive) colors.accent.copy(alpha = 0.42f) else Color.Transparent,
-                        shape = RoundedCornerShape(18.dp)
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        if (!isActive) CxHaptics.snap(hapticView)
-                        onSelect(tab)
-                    }
-                    .padding(vertical = 14.dp, horizontal = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                MonoText(
-                    text = tab.name,
-                    fontSize = CxTypography.textSm,
-                    fontWeight = if (isActive) CxTypography.weightBlack else CxTypography.weightMedium,
-                    color = if (isActive) colors.accent else colors.textTertiary,
-                    letterSpacing = CxTypography.textXs * 0.12
-                )
-            }
-        }
-    }
+    val labels = listOf("Send", "Receive", "Tools")
+    com.clex.android.ui.components.FlatTabBar(
+        tabs = labels,
+        selected = currentTab.ordinal,
+        onSelect = { i -> onSelect(WorkspaceTab.entries[i]) },
+    )
 }
 
 // ── SEND TAB ─────────────────────────────────────

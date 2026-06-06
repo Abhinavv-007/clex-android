@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.clex.android.data.ChainSessionDetail
 import com.clex.android.data.ChainStats
 import com.clex.android.data.ClexChainApi
@@ -85,13 +86,8 @@ fun ChainScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (colors.isDark) colors.bgPrimary else CxColors.cream)
+            .background(colors.bgPrimary)
     ) {
-        com.clex.android.ui.components.LiquidMeshBackground(
-            modifier = Modifier.matchParentSize(),
-            intensity = 0.7f,
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -162,17 +158,64 @@ fun ChainScreen() {
 @Composable
 private fun ChainTopBar() {
     val colors = CxTheme.colors
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .background(colors.bgPrimary)
-            .padding(horizontal = CxSpacing.screenHorizontal, vertical = CxSpacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(
+                start = CxSpacing.screenHorizontal,
+                end = CxSpacing.screenHorizontal,
+                top = CxSpacing.lg,
+                bottom = CxSpacing.md,
+            ),
     ) {
-        PageMark(glyph = "⌗", title = "CHAIN")
-        TopBarStatusChip(text = "PUBLIC LEDGER", accentColor = colors.accent, showDot = true)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            androidx.compose.material3.Text(
+                text = "CHAIN",
+                color = colors.textTertiary,
+                fontSize = 11.sp,
+                fontFamily = CxTypography.fontDisplay,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.W600,
+                letterSpacing = 1.6.sp,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                com.clex.android.ui.components.StatusDot(color = colors.accent)
+                Spacer(Modifier.width(8.dp))
+                androidx.compose.material3.Text(
+                    text = "PUBLIC LEDGER",
+                    color = colors.accent,
+                    fontSize = 11.sp,
+                    fontFamily = CxTypography.fontDisplay,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.W700,
+                    letterSpacing = 1.5.sp,
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            androidx.compose.material3.Text(
+                text = "Routing ledger",
+                color = colors.textPrimary,
+                fontSize = 32.sp,
+                fontFamily = CxTypography.fontDisplay,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.W700,
+                letterSpacing = (-0.5).sp,
+            )
+            com.clex.android.ui.components.CxIcon(
+                icon = com.clex.android.ui.components.CxIconType.CHAIN,
+                size = 26.dp,
+                color = colors.textPrimary,
+                strokeWidth = 1.5.dp,
+            )
+        }
     }
 }
 

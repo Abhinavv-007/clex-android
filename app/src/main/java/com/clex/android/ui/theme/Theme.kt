@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 
 // ── Global theme state ─────────────────────────────
 object ThemeManager {
-    var isDark by mutableStateOf(true)
+    var isDark by mutableStateOf(false)
         internal set
 
     private var prefs: android.content.SharedPreferences? = null
@@ -26,7 +26,7 @@ object ThemeManager {
     fun init(context: android.content.Context) {
         if (prefs != null) return
         prefs = context.getSharedPreferences("clex_prefs", android.content.Context.MODE_PRIVATE)
-        isDark = prefs?.getBoolean(PREF_KEY, true) ?: true
+        isDark = prefs?.getBoolean(PREF_KEY, false) ?: false
     }
 
     fun toggle() {
@@ -117,7 +117,7 @@ val LightCxColors = CxColorScheme(
     isDark = false
 )
 
-val LocalCxColors = staticCompositionLocalOf { DarkCxColors }
+val LocalCxColors = staticCompositionLocalOf { LightCxColors }
 
 object CxTheme {
     val colors: CxColorScheme
