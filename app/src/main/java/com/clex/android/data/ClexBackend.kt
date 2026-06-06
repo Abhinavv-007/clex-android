@@ -778,6 +778,7 @@ private fun httpJsonRequest(
             setRequestProperty("Content-Type", "application/json")
         }
         setRequestProperty("Accept", "application/json")
+        ClexUserAgent.value?.let { setRequestProperty("User-Agent", it) }
         headers.forEach { (key, value) -> setRequestProperty(key, value) }
     }
 

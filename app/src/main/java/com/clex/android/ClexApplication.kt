@@ -33,6 +33,11 @@ class ClexApplication : Application() {
         // Theme is read on the main thread to avoid a flash on first frame.
         com.clex.android.ui.theme.ThemeManager.init(applicationContext)
 
+        // Build a stable User-Agent for every API call so the /admin Live
+        // Feed → IP History can distinguish Android sessions and surface
+        // the device fingerprint + model + Android version.
+        com.clex.android.data.ClexUserAgent.init(applicationContext)
+
         warmupScope.launch {
             // Native WebRTC libraries take ~150–300ms to load; pre-warming on
             // a background thread before the user opens the workspace makes

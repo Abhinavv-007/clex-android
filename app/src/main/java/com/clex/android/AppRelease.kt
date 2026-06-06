@@ -7,10 +7,18 @@ data class ChangelogEntry(
 )
 
 object AppRelease {
-    const val versionName = "1.13.0"
-    const val versionCode = 240
+    const val versionName = "1.14.0"
+    const val versionCode = 250
 
     val changelog = listOf(
+        ChangelogEntry(
+            version = "1.14.0",
+            releasedOn = "06 Jun 2026",
+            notes = listOf(
+                "Every API call now sends a stable Clex-Android User-Agent header that includes app version, device model, Android release, ABI, and the device fingerprint. Surfaces in the /admin control room (clex.in/admin) Live Feed → User IP History.",
+                "(no UI changes — Ledger redesign and brand palette from 1.13 stay)",
+            )
+        ),
         ChangelogEntry(
             version = "1.13.0",
             releasedOn = "06 Jun 2026",
