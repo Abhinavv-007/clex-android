@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import com.clex.android.data.displayName
 
 class WorkspaceToolRunner(private val context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -268,14 +269,3 @@ private fun android.net.Uri.toWorkspaceToolFile(context: Context): WorkspaceTool
     )
 }
 
-private fun android.net.Uri.displayName(context: Context): String? {
-    if (scheme != "content") return path?.substringAfterLast('/')
-    val cursor = context.contentResolver.query(this, null, null, null, null)
-    cursor?.use {
-        if (it.moveToFirst()) {
-            val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (index >= 0) return it.getString(index)
-        }
-    }
-    return path?.substringAfterLast('/')
-}
